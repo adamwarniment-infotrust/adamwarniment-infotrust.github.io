@@ -10,5 +10,18 @@ dataLayer.push({
   'user':{
     'loggedIn': true,
     'type': 'firstTimeBuyer'
+  },
+  'layer1': {
+    'nested': 'one',
+    'layer2': {
+      'nested': 'two',
+      'layer3': {
+        'nested': 'three',
+        'layer4': {
+          'nested': 'four',
+          'sample': 'adamw'
+        }
+      }
+    }
   }
 });
