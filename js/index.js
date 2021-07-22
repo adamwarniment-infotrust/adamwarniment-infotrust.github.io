@@ -26,27 +26,13 @@ dataLayer.push({
   }
 });
 
-window.digitalData = [];
-digitalData.push({
-  'event':'page_data',
-  'common':{
-    'environment':'staging'
+window.digitalData  = {
+  user: {
+    id: '234567',
+    userBirthday: '06/26/1990'
   },
-  'user':{
-    'loggedIn': true,
-    'type': 'firstTimeBuyer'
-  },
-  'layer1': {
-    'nested': 'one',
-    'layer2': {
-      'nested': 'two',
-      'layer3': {
-        'nested': 'three',
-        'layer4': {
-          'nested': 'four',
-          'sample': 'adamw'
-        }
-      }
-    }
+  page: {
+    pageLocale: 'us',
+    pageType: 'plp'
   }
-});
+}
