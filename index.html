@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -655,5 +655,220 @@ kbd{font-family:var(--font); border:1px solid var(--line); border-bottom-width:3
   render();
 })();
 </script>
+<!-- ===== The Big Wheel: slide-out panel (independent of the game) ===== -->
+<style>
+.bw-tab{position:fixed; right:0; top:50%; transform:translateY(-50%); z-index:40; border:0; cursor:pointer;
+  background:#F75E29; color:#fff; font-family:var(--font); font-weight:900; font-style:italic; text-transform:uppercase; letter-spacing:.06em; font-size:14px;
+  writing-mode:vertical-rl; text-orientation:mixed; padding:18px 11px; border-radius:14px 0 0 14px; box-shadow:-6px 8px 20px rgba(0,0,0,.35);
+  transition:padding .2s, opacity .25s}
+.bw-tab:hover{padding-right:16px}
+.bw-tab span{display:inline-block; transform:rotate(180deg)}
+.bw-open .bw-tab{opacity:0; pointer-events:none}
+.bw-panel{position:fixed; top:0; right:0; height:100%; width:min(420px,94vw); z-index:41; overflow-y:auto;
+  background:linear-gradient(180deg,#0B3366,#002554); color:#fff; border-left:3px solid #F75E29; box-shadow:-20px 0 50px rgba(0,0,0,.45);
+  padding:calc(18px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));
+  transform:translateX(105%); transition:transform .45s cubic-bezier(.3,1.2,.5,1); font-family:var(--font)}
+.bw-open .bw-panel{transform:translateX(0)}
+.bw-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px}
+.bw-head h2{margin:0; font-weight:900; font-style:italic; text-transform:uppercase; font-size:30px; line-height:.95; transform:skewX(-4deg); text-shadow:4px 4px 0 rgba(35,136,255,.7)}
+.bw-iconbtn{background:transparent; color:#fff; border:1px solid rgba(89,175,255,.35); border-radius:100px; padding:7px 14px; font:inherit; font-size:13px; font-weight:600; cursor:pointer}
+.bw-iconbtn:hover{border-color:#59AFFF}
+.bw-iconbtn[aria-pressed="false"]{opacity:.6}
+.bw-tools{display:flex; gap:6px}
+.bw-cab{position:relative; padding:18px 16px; border-radius:26px; background:linear-gradient(180deg,#0B3366,#001C40); border:3px solid #F75E29;
+  box-shadow:0 0 0 5px #002554, 0 0 0 7px rgba(89,175,255,.45), 0 18px 40px rgba(0,0,0,.45); margin:0 26px 0 4px}
+.bw-bulbs{position:absolute; inset:5px; pointer-events:none}
+.bw-bulbs i{position:absolute; width:8px; height:8px; border-radius:50%; background:#FFE9D9; box-shadow:0 0 7px 2px rgba(255,190,150,.7); transform:translate(-50%,-50%)}
+.bw-bulbs i.off{background:#5A3A2C; box-shadow:none}
+.bw-win{position:relative; height:min(380px,48vh); border-radius:14px; overflow:hidden; perspective:900px; background:#001634; box-shadow:inset 0 0 0 3px rgba(0,0,0,.4)}
+.bw-cyl{position:absolute; left:0; right:0; top:50%; height:var(--bwh); margin-top:calc(var(--bwh) / -2); transform-style:preserve-3d; will-change:transform}
+.bw-seg{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; backface-visibility:hidden; text-align:center; padding:0 14px;
+  font-weight:900; font-style:italic; text-transform:uppercase; font-size:17px; line-height:1; border-top:2px solid rgba(0,0,0,.25); border-bottom:2px solid rgba(255,255,255,.12)}
+.bw-seg span{display:block; transform:skewX(-6deg)}
+.bw-seg.c0{background:linear-gradient(180deg,#FF7A47,#F75E29 50%,#D64716); color:#fff}
+.bw-seg.c1{background:linear-gradient(180deg,#1A4F8E,#0B3366 50%,#062448); color:#fff}
+.bw-seg.c2{background:linear-gradient(180deg,#4FA0FF,#2388FF 50%,#0F6BD6); color:#fff}
+.bw-seg.c3{background:linear-gradient(180deg,#FFFFFF,#E9F3FF 50%,#C9DDF5); color:#002554}
+.bw-shade{position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(0,10,30,.92) 0%, rgba(0,10,30,.35) 26%, rgba(0,0,0,0) 42%, rgba(0,0,0,0) 58%, rgba(0,10,30,.35) 74%, rgba(0,10,30,.92) 100%)}
+.bw-gloss{position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg, rgba(255,255,255,.10), rgba(255,255,255,0) 18%, rgba(255,255,255,0) 82%, rgba(0,0,0,.25))}
+.bw-front{position:absolute; left:0; right:0; top:50%; height:var(--bwh); margin-top:calc(var(--bwh) / -2); pointer-events:none; border-radius:4px;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.85), 0 0 22px rgba(247,94,41,.55); transition:box-shadow .3s}
+.bw-win.won .bw-front{box-shadow:inset 0 0 0 4px #fff, 0 0 34px 6px rgba(247,94,41,.9)}
+.bw-flap{position:absolute; right:-26px; top:50%; width:48px; height:28px; margin-top:-14px; transform-origin:85% 50%; z-index:3; filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
+.bw-flap::before{content:""; position:absolute; inset:0; background:#fff; clip-path:polygon(0 50%, 100% 0, 100% 100%)}
+.bw-flap::after{content:""; position:absolute; right:2px; top:50%; width:13px; height:13px; margin-top:-6.5px; border-radius:50%; background:#F75E29; border:3px solid #fff}
+.bw-flap.kick{animation:bwkick .09s ease-out}
+@keyframes bwkick{0%{transform:rotate(0)} 40%{transform:rotate(-16deg)} 100%{transform:rotate(0)}}
+.bw-result{margin:20px 0 14px; background:rgba(255,255,255,.07); border:2px solid rgba(89,175,255,.28); border-radius:18px; padding:14px 18px; min-height:96px}
+.bw-result .k{margin:0 0 2px; font-weight:800; font-style:italic; text-transform:uppercase; color:#59AFFF; font-size:12px}
+.bw-result .who{font-weight:900; font-style:italic; font-size:30px; line-height:1.05; transform:skewX(-4deg); transform-origin:left}
+.bw-result.won{border-color:#F75E29}
+.bw-result.won .who{color:#F75E29; animation:bwpop .55s cubic-bezier(.2,1.5,.4,1)}
+@keyframes bwpop{0%{transform:scale(.7) skewX(-4deg)} 100%{transform:scale(1) skewX(-4deg)}}
+.bw-spin{width:100%; background:#F75E29; color:#fff; border:3px solid #F75E29; border-radius:100px; padding:15px 20px; font:inherit; font-weight:900; font-style:italic; font-size:20px; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; box-shadow:0 10px 24px rgba(247,94,41,.35); transition:background .15s, color .15s}
+.bw-spin:hover:not(:disabled){background:#fff; color:#F75E29}
+.bw-spin:disabled{opacity:.55; cursor:default}
+.bw-drawer{margin-top:16px; border:1.5px solid rgba(89,175,255,.28); border-radius:16px; padding:12px 14px}
+.bw-drawer summary{cursor:pointer; list-style:none; display:flex; justify-content:space-between; font-weight:800; font-style:italic; text-transform:uppercase; color:#59AFFF; font-size:12px}
+.bw-drawer summary::-webkit-details-marker{display:none}
+.bw-drawer summary::after{content:"Edit"; font-style:normal; text-transform:none; color:#A9C6E8; font-weight:600}
+.bw-drawer[open] summary::after{content:"Done"}
+.bw-drawer p{color:#A9C6E8; font-size:12px; margin:8px 0 10px}
+.bw-chips{display:flex; flex-wrap:wrap; gap:6px}
+.bw-chip{border:1.5px solid rgba(89,175,255,.28); background:#0B3366; color:#fff; border-radius:100px; padding:6px 12px; font:inherit; font-size:12px; font-weight:600; cursor:pointer}
+.bw-chip.out{opacity:.45; text-decoration:line-through}
+.bw-reset{margin-top:10px}
+@media (prefers-reduced-motion: reduce){ .bw-panel{transition:none} .bw-flap.kick,.bw-result.won .who{animation:none} }
+@media print{ .bw-tab,.bw-panel{display:none !important} }
+</style>
+
+<button class="bw-tab" id="bwTab" aria-expanded="false" aria-controls="bwPanel"><span>🎡 Big Wheel</span></button>
+<aside class="bw-panel" id="bwPanel" aria-label="The Big Wheel" aria-hidden="true">
+  <div class="bw-head">
+    <h2>The Big<br>Wheel</h2>
+    <div class="bw-tools">
+      <button class="bw-iconbtn" id="bwSound" aria-pressed="true" title="Wheel clacker sound">Clacker</button>
+      <button class="bw-iconbtn" id="bwClose" aria-label="Close the wheel">Close ✕</button>
+    </div>
+  </div>
+  <div class="bw-cab">
+    <div class="bw-bulbs" id="bwBulbs" aria-hidden="true"></div>
+    <div class="bw-win" id="bwWin">
+      <div class="bw-cyl" id="bwCyl"></div>
+      <div class="bw-shade"></div><div class="bw-gloss"></div><div class="bw-front"></div>
+    </div>
+    <div class="bw-flap" id="bwFlap" aria-hidden="true"></div>
+  </div>
+  <div class="bw-result" id="bwResult" aria-live="polite"><p class="k" id="bwK">Up next</p><div class="who" id="bwWho">Give it a spin!</div></div>
+  <button class="bw-spin" id="bwSpin">Spin!</button>
+  <details class="bw-drawer">
+    <summary id="bwSum">On the wheel</summary>
+    <p>Click a name to take it off the wheel or put it back.</p>
+    <div class="bw-chips" id="bwChips"></div>
+    <button class="bw-iconbtn bw-reset" id="bwReset">Put everyone back</button>
+  </details>
+</aside>
+
+<script>
+(function(){
+  const EVERYONE = ["Tim Krozek","Chen Yan","Corey Chapman","Lisa Scott","Paul Bruso","Ramila Abiar","Zoe Miller","Bryan Zivich","Elena Shkolnikova","James Bryan Gonzales",
+    "Michelle Easton","Polina Panich","Rachel Wilke","Alex Yastrebenetsky","Amanda Tuepker","Chris Breneman","Michael Loban","Pam Castricone","Peter Todorov","Shaira Gayle Pagco"];
+  const KEY = "gts-bigwheel-panel-v1";
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let S = (() => { try{ const d = JSON.parse(localStorage.getItem(KEY)); return d && Array.isArray(d.out) ? d : null; }catch(e){ return null; } })() || { out:[], sound:true };
+  const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  /* open / close */
+  function setOpen(o){
+    document.body.classList.toggle("bw-open", o);
+    $("bwTab").setAttribute("aria-expanded", o); $("bwPanel").setAttribute("aria-hidden", !o);
+    if(o){ build(); buildBulbs(); chase(false); setTimeout(() => $("bwSpin").focus(), 300); } else { clearInterval(bulbT); }
+  }
+  $("bwTab").onclick = () => setOpen(true);
+  $("bwClose").onclick = () => setOpen(false);
+  document.addEventListener("keydown", e => { if(e.key === "Escape" && document.body.classList.contains("bw-open")) setOpen(false); });
+
+  /* wheel */
+  let segs = [], A = 0, H = 0, R = 0, theta = 0, spinning = false;
+  const active = () => EVERYONE.filter(n => !S.out.includes(n));
+  const short = n => { const p = n.split(" "); return p.length > 2 ? p[0] + " " + p[p.length-1] : n; };
+  function build(){
+    const names = active(); segs = [];
+    if(names.length){ const n = Math.max(16, names.length); while(segs.length < n) segs.push(...names); segs = segs.slice(0, n); }
+    const n = segs.length || 1;
+    H = Math.round(Math.min(64, Math.max(48, $("bwWin").clientHeight / 7)));
+    A = 360 / n; R = H / (2 * Math.tan(Math.PI / n));
+    $("bwWin").style.setProperty("--bwh", H + "px");
+    $("bwCyl").innerHTML = segs.length ? segs.map((nm,i) => `<div class="bw-seg c${i % 4}" style="transform:rotateX(${-i*A}deg) translateZ(${R}px)"><span>${esc(short(nm))}</span></div>`).join("")
+      : `<div class="bw-seg c1"><span>Add people</span></div>`;
+    theta = 0; rot(0); chips();
+  }
+  const rot = t => { $("bwCyl").style.transform = `translateZ(${-R}px) rotateX(${t}deg)`; };
+
+  function buildBulbs(){
+    const b = $("bwBulbs"), r = b.getBoundingClientRect(), pts = [], gap = 26;
+    const nx = Math.max(4, Math.round(r.width / gap)), ny = Math.max(6, Math.round(r.height / gap));
+    for(let i=0;i<=nx;i++){ pts.push([i/nx*100,0]); pts.push([i/nx*100,100]); }
+    for(let j=1;j<ny;j++){ pts.push([0,j/ny*100]); pts.push([100,j/ny*100]); }
+    b.innerHTML = pts.map(p => `<i style="left:${p[0]}%;top:${p[1]}%"></i>`).join("");
+  }
+  let bulbT = null, ph = 0;
+  function chase(fast){ clearInterval(bulbT); bulbT = setInterval(() => { ph++; [...$("bwBulbs").children].forEach((el,i) => el.classList.toggle("off", (i+ph) % 3 === 0)); }, fast ? 70 : 420); }
+  function flash(){ clearInterval(bulbT); let k = 0; bulbT = setInterval(() => { k++; [...$("bwBulbs").children].forEach(el => el.classList.toggle("off", k % 2 === 0)); if(k > 12) chase(false); }, 120); }
+
+  function spin(){
+    if(spinning || !segs.length || !active().length) return;
+    spinning = true; $("bwSpin").disabled = true; $("bwWin").classList.remove("won"); $("bwResult").classList.remove("won");
+    $("bwK").textContent = "Spinning…"; $("bwWho").textContent = "…";
+    const n = segs.length, target = Math.floor(Math.random() * n), jitter = (Math.random() - .5) * A * .6;
+    const start = theta, base = ((start % 360) + 360) % 360;
+    let delta = target * A - base; if(delta < 0) delta += 360;
+    const end = start + (3 + Math.floor(Math.random() * 2)) * 360 + delta + jitter;
+    const dur = reduce ? 0 : 5200 + Math.random() * 1200;
+    chase(true);
+    if(!dur){ theta = end; rot(end); return settle(); }
+    let last = Math.floor((start + A/2) / A); const t0 = performance.now();
+    (function step(now){
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+      theta = start + (end - start) * e; rot(theta);
+      const s = Math.floor((theta + A/2) / A);
+      if(s !== last){ clack(p); kick(); last = s; }
+      if(p < 1) requestAnimationFrame(step); else settle();
+    })(t0);
+  }
+  function settle(){
+    const snap = Math.round(theta / A) * A, from = theta;
+    if(reduce || Math.abs(snap - from) < .01){ theta = snap; rot(theta); return announce(); }
+    const t0 = performance.now();
+    (function st(now){ const p = Math.min(1, (now - t0) / 380), e = 1 - Math.pow(1 - p, 3);
+      theta = from + (snap - from) * e; rot(theta); if(p < 1) requestAnimationFrame(st); else { theta = snap; announce(); } })(t0);
+  }
+  function announce(){
+    const n = segs.length, name = segs[((Math.round(theta / A) % n) + n) % n];
+    spinning = false; $("bwSpin").disabled = false;
+    $("bwWin").classList.add("won"); $("bwResult").classList.add("won");
+    $("bwK").textContent = "You're up!"; $("bwWho").textContent = name; flash();
+  }
+  function kick(){ const f = $("bwFlap"); f.classList.remove("kick"); void f.offsetWidth; f.classList.add("kick"); }
+
+  /* clacker: wooden flapper sound, distinct from the game's slider tick */
+  let ctx = null, buf = null, lastC = 0;
+  function clack(p){
+    if(!S.sound) return;
+    try{
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); if(ctx.state === "suspended") ctx.resume();
+      const t = ctx.currentTime; if(t - lastC < .025) return; lastC = t;
+      if(!buf){ buf = ctx.createBuffer(1, ctx.sampleRate * .05, ctx.sampleRate); const d = buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 3); }
+      const vol = .35 + .25 * p;
+      const s = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = buf; bp.type = "bandpass"; bp.frequency.value = 1700 + Math.random()*300; bp.Q.value = 2.2;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + .045);
+      s.connect(bp); bp.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + .05);
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(120, t + .05);
+      og.gain.setValueAtTime(vol * .55, t); og.gain.exponentialRampToValueAtTime(.0001, t + .06);
+      o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t + .07);
+    }catch(e){}
+  }
+  const paintSound = () => { $("bwSound").setAttribute("aria-pressed", S.sound); $("bwSound").textContent = S.sound ? "Clacker: on" : "Clacker: off"; };
+  $("bwSound").onclick = () => { S.sound = !S.sound; save(); paintSound(); };
+
+  function chips(){
+    $("bwSum").textContent = `On the wheel (${active().length} of ${EVERYONE.length})`;
+    $("bwChips").innerHTML = EVERYONE.map(n => `<button class="bw-chip ${S.out.includes(n) ? "out" : ""}" data-n="${esc(n)}">${esc(n)}</button>`).join("");
+  }
+  $("bwChips").addEventListener("click", e => { const b = e.target.closest(".bw-chip"); if(!b || spinning) return; const n = b.dataset.n;
+    S.out = S.out.includes(n) ? S.out.filter(x => x !== n) : [...S.out, n]; save(); build(); });
+  $("bwReset").onclick = () => { if(spinning) return; S.out = []; save(); build(); };
+  $("bwSpin").onclick = spin;
+
+  paintSound();
+  let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if(document.body.classList.contains("bw-open") && !spinning){ build(); buildBulbs(); } }, 200); });
+})();
+</script>
+<!-- ===== end Big Wheel ===== -->
+
 </body>
 </html>
