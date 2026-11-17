@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GMP Stack Simulator · InfoTrust</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
+<style>
+/* This variation is intentionally dark in both themes: it borrows the system's navy stats band. */
+:root{
+  --bg:#1B2438; --band:#2C374F; --panel:#253049; --panel-2:#2E3A56; --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.16);
+  --ink:#FFFFFF; --ink-2:#C9D2E0; --ink-3:#97A3B7; --blue:#59AFFF; --blue-2:#2388FF; --navy:#084A87; --orange:#F75E29; --orange-d:#FF7240;
+  --ok:#68D8D5; --warn:#FBBC04; --bad:#F2795F;
+  color-scheme:dark;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#1B2438; --band:#2C374F; --panel:#253049; color-scheme:dark; } }
+:root[data-theme="dark"]{ --bg:#1B2438; --band:#2C374F; --panel:#253049; color-scheme:dark; }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.07;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#root{position:relative;z-index:1}
+.logo{height:24px;filter:brightness(0) invert(1);display:block}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px clamp(16px,4vw,48px);border-bottom:1px solid var(--line)}
+header .t{font-size:13px;color:var(--ink-3);font-weight:500}
+.btn{font:500 15px Poppins,system-ui,sans-serif;height:46px;padding:0 26px;border-radius:100px;border:0;cursor:pointer;display:inline-flex;align-items:center;text-decoration:none;transition:transform .2s,background .2s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--orange);color:#fff}.btn-primary:hover{background:var(--orange-d)}
+.btn-ghost{background:transparent;color:#fff;border:1px solid var(--line-2)}
+:focus-visible{outline:3px solid var(--blue-2);outline-offset:2px}
+.intro{max-width:1240px;margin:0 auto;padding:44px clamp(16px,4vw,48px) 12px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.eyebrow{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+h1{font-size:clamp(30px,4.4vw,48px);line-height:1.08;letter-spacing:-.02em;margin:10px 0 12px;max-width:18ch}
+.lede{color:var(--ink-2);font-size:17px;line-height:1.6;max-width:60ch;margin:0}
+.steps{display:flex;gap:8px;font-size:13px;color:var(--ink-3)}
+.steps span{border:1px solid var(--line-2);padding:6px 12px;border-radius:100px}
+.steps span.on{border-color:var(--blue);color:#fff}
+.grid{max-width:1240px;margin:0 auto;padding:24px clamp(16px,4vw,48px) 40px;display:grid;grid-template-columns:320px 1fr 300px;gap:20px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:22px}
+.panel h3{margin:0 0 4px;font-size:15px}
+.panel p.s{margin:0 0 16px;font-size:12.5px;color:var(--ink-3);line-height:1.5}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px}
+.tile{font:inherit;color:var(--ink-2);background:var(--panel-2);border:1.5px solid transparent;border-radius:10px;padding:10px;text-align:left;cursor:pointer;transition:all .2s}
+.tile b{display:block;font-size:13.5px;color:#fff;font-weight:600}
+.tile small{font-size:11.5px;color:var(--ink-3)}
+.tile.on{border-color:var(--blue);background:rgba(89,175,255,.12)}
+.ctrl{margin-bottom:20px}
+.ctrl label{display:flex;justify-content:space-between;font-size:13px;font-weight:500;margin-bottom:8px}
+.ctrl label span{color:var(--blue);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--blue);height:24px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--panel-2);padding:4px;border-radius:100px}
+.seg button{font:500 12.5px Poppins,sans-serif;color:var(--ink-2);background:transparent;border:0;border-radius:100px;padding:8px 4px;cursor:pointer}
+.seg button.on{background:#fff;color:#1B2438}
+/* stage */
+.stage{background:var(--band);border:1px solid var(--line);border-radius:15px;padding:18px;position:relative;overflow:hidden}
+.stage::before{content:"";position:absolute;left:50%;top:48%;width:520px;height:520px;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(35,136,255,.28),transparent 62%);pointer-events:none;transition:opacity .6s}
+.stage.weak::before{opacity:.25}
+.hubs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;position:relative;margin-bottom:6px}
+.hubs button{font:500 12.5px Poppins,sans-serif;color:var(--ink-2);background:rgba(255,255,255,.04);border:1px solid var(--line-2);border-radius:100px;padding:7px 14px;cursor:pointer;transition:all .2s}
+.hubs button.on{background:#fff;color:#1B2438;border-color:#fff}
+.hubs .lbl{width:100%;text-align:center;font-size:12.5px;color:var(--ink-3);margin-bottom:6px}
+svg.net{width:100%;height:auto;display:block;position:relative}
+.flow{stroke-dasharray:4 10;animation:flow 1.4s linear infinite}
+.flow.slow{animation-duration:4s}
+@keyframes flow{to{stroke-dashoffset:-28}}
+.node{transition:opacity .4s}
+.hub-pulse{animation:pulse 2.4s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+.caption{position:relative;text-align:center;font-size:13.5px;color:var(--ink-2);min-height:42px;margin:4px auto 0;max-width:52ch;line-height:1.5}
+/* health */
+.health h3{margin:0 0 16px;font-size:15px}
+.gauge{margin-bottom:16px}
+.gauge .l{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.gauge .l b{font-weight:600}
+.gauge .bar{height:8px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}
+.gauge .bar i{display:block;height:100%;border-radius:8px;transition:width .7s cubic-bezier(.4,0,.2,1),background .5s}
+.gauge small{display:block;font-size:11.5px;color:var(--ink-3);margin-top:5px;line-height:1.4;min-height:16px}
+.overall{display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;background:rgba(255,255,255,.04);margin-bottom:18px}
+.overall big{font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:1;transition:color .4s}
+.overall span{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+.find{width:100%;justify-content:center;margin-top:6px}
+/* results */
+.results{max-width:1240px;margin:0 auto;padding:10px clamp(16px,4vw,48px) 60px}
+.rhead{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:stretch;margin-bottom:20px}
+.rcard{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:28px}
+.win{background:linear-gradient(140deg,#0D6EC7,#084A87);border:0;position:relative;overflow:hidden}
+.win::after{content:"";position:absolute;right:-80px;bottom:-120px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 65%)}
+.win .eyebrow{color:#CFE3FF}
+.win h2{font-size:clamp(26px,3.4vw,36px);margin:10px 0 10px;letter-spacing:-.01em}
+.win p{color:#DCE9FA;margin:0 0 20px;line-height:1.6;max-width:52ch}
+.why{display:grid;gap:12px}
+.why div{display:flex;gap:10px;font-size:14px;line-height:1.5;color:var(--ink-2)}
+.why b{color:#fff}
+.why svg{flex:none;color:var(--ok);margin-top:3px}
+.rk{display:grid;grid-template-columns:24px 1fr 52px;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.rk:last-child{border:0}
+.rk .n{color:var(--ink-3);font-weight:700}
+.rk .bar{height:6px;border-radius:6px;background:rgba(255,255,255,.08);margin-top:7px;overflow:hidden}
+.rk .bar i{display:block;height:100%;background:var(--ink-3);border-radius:6px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.rk.top .bar i{background:var(--blue)} .rk.top .n,.rk.top .p{color:var(--blue)}
+.rk .p{font-weight:700;text-align:right}
+.rk small{display:block;color:var(--ink-3);font-size:12px}
+.cta{margin-top:20px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:var(--band);border:1px solid var(--line);border-radius:15px;padding:clamp(24px,4vw,40px)}
+.cta h2{margin:0 0 6px;font-size:clamp(22px,3vw,30px);letter-spacing:-.01em}
+.cta p{margin:0;color:var(--ink-2)}
+.cta .b{display:flex;gap:12px;flex-wrap:wrap}
+.foot{text-align:center;font-size:12px;color:var(--ink-3);margin-top:22px}
+.fade{animation:fade .5s ease both}@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (max-width:1100px){.grid{grid-template-columns:1fr 1fr}.stage{grid-column:1/-1;order:-1}}
+@media (max-width:720px){.grid,.rhead{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useMemo} = React;
+const LOGO="data:image/png;base64,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";
+const TALK="https://infotrust.com/talk-to-us/";
+const GMP="https://infotrust.com/what-we-do/google-marketing-platform/";
+const Check=()=> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>;
+
+const PLATFORMS=[
+  {id:"ga",n:"Analytics 360",s:"Measurement"},{id:"dv",n:"DV360",s:"Programmatic"},
+  {id:"cm",n:"CM360",s:"Ad serving"},{id:"sa",n:"SA360",s:"Search"},
+  {id:"bq",n:"BigQuery",s:"Warehouse"},{id:"cmp",n:"Consent Mode",s:"Privacy"},
+];
+const HUBS=[
+  {id:"it",n:"InfoTrust",d:"GMP Sales Partner, no media buying"},
+  {id:"agency",n:"Media Agency",d:"GMP seat bundled in a media contract"},
+  {id:"direct",n:"Go It Alone",d:"Your team manages licenses and support"},
+  {id:"consult",n:"Generalist Consultancy",d:"Project-based implementation"},
+];
+const DIMS=[
+  {id:"own",n:"Ownership"},{id:"tr",n:"Cost transparency"},{id:"gov",n:"Governance and privacy"},{id:"en",n:"Team enablement"},
+];
+const clamp=(v,a=6,b=100)=>Math.max(a,Math.min(b,Math.round(v)));
+
+// Health model per hub. Inputs push the alternatives down; the InfoTrust hub stays near the top.
+function health(hub,st){
+  const media=["dv","cm","sa"].filter(p=>st.plat.includes(p)).length;
+  const spend=st.spend, props=st.props, exp=st.exp, ag=st.agency; // spend 1..100 ($M), props 1..200, exp 1..5, ag 0..2
+  const pScale=Math.min(1,props/80), sScale=Math.min(1,spend/40);
+  const privacyOn=st.plat.includes("cmp");
+  let h;
+  if(hub==="it") h={own:96,tr:95,gov:92+ (privacyOn?4:0),en:90+exp};
+  if(hub==="agency") h={own:44-ag*8-sScale*12, tr:40-sScale*22-media*3, gov:46-pScale*18-(privacyOn?0:8), en:38+ (5-exp)*2};
+  if(hub==="direct") h={own:88, tr:78, gov:62-pScale*40-(privacyOn?0:10), en:28+exp*12-media*4};
+  if(hub==="consult") h={own:64, tr:58, gov:72-pScale*14, en:58-media*9};
+  const out={}; DIMS.forEach(d=>out[d.id]=clamp(h[d.id],6,hub==="it"?99:86)); return out;
+}
+const avg=h=>Math.round(DIMS.reduce((a,d)=>a+h[d.id],0)/DIMS.length);
+const NOTES={
+  it:{own:"Full edit access, data ownership and portability",tr:"Usage-based rates on spend, impressions and clicks",gov:"Tag Inspector and InfoTrust Suite monitoring",en:"Training plans, AI Success Checklist, Acceleration Hub"},
+  agency:{own:"Seat sits on the agency’s side of the contract",tr:"Platform fees blended into the media retainer",gov:"Governance isn’t the agency’s core job",en:"Knowledge leaves when the agency does"},
+  direct:{own:"You hold the seat",tr:"Direct rates, but no one to negotiate usage",gov:"Monitoring every property is on your team",en:"Depends entirely on in-house experience"},
+  consult:{own:"Advice on setup, licenses sourced elsewhere",tr:"Billed per project",gov:"Point-in-time audits",en:"Little hands-on media platform support"},
+};
+const CAPTION={
+  it:"Licenses, data and governance sit with you. InfoTrust enables the stack and works alongside any agency.",
+  agency:"Data flows through the agency’s contract. Access and rates depend on that relationship.",
+  direct:"You own everything, including every configuration issue and support ticket.",
+  consult:"Good for a project. Media platforms and ongoing monitoring fall outside the scope.",
+};
+
+function Network({hub,st}){
+  const W=640,H=420,cx=W/2,cy=H/2,R=150;
+  const active=PLATFORMS.filter(p=>st.plat.includes(p.id));
+  const weak=hub!=="it";
+  const h=health(hub,st); const score=avg(h);
+  const col=score>85?"#59AFFF":score>60?"#FBBC04":"#F2795F";
+  return <svg className="net" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${HUBS.find(x=>x.id===hub).n} at the center of your stack`}>
+    <ellipse cx={cx} cy={cy+170} rx="170" ry="16" fill="rgba(0,0,0,.25)"/>
+    {PLATFORMS.map((p,i)=>{
+      const a=-Math.PI/2+i*(2*Math.PI/PLATFORMS.length); const x=cx+Math.cos(a)*R*1.35, y=cy+Math.sin(a)*R;
+      const on=st.plat.includes(p.id);
+      const broken=weak && on && ((hub==="agency"&&["ga","bq","cmp"].includes(p.id))||(hub==="consult"&&["dv","cm","sa"].includes(p.id))||(hub==="direct"&&p.id==="cmp"&&st.props>40));
+      return <g key={p.id} className="node" style={{opacity:on?1:.28}}>
+        {on && <line x1={cx} y1={cy} x2={x} y2={y} stroke={broken?"#F2795F":col} strokeWidth="2" className={"flow"+(broken?" slow":"")} opacity={broken?.7:1}/>}
+        <rect x={x-58} y={y-24} width="116" height="48" rx="10" fill="#2E3A56" stroke={on?(broken?"#F2795F":"rgba(255,255,255,.22)"):"rgba(255,255,255,.08)"}/>
+        <text x={x} y={y-2} textAnchor="middle" fill="#fff" fontSize="13" fontWeight="600" fontFamily="Poppins">{p.n}</text>
+        <text x={x} y={y+14} textAnchor="middle" fill={broken?"#F2795F":"#97A3B7"} fontSize="10.5" fontFamily="Poppins">{broken?"gap detected":p.s}</text>
+      </g>;
+    })}
+    <circle cx={cx} cy={cy} r="58" fill="none" stroke={col} strokeWidth="2" className="hub-pulse"/>
+    <circle cx={cx} cy={cy} r="58" fill={hub==="it"?"url(#hubg)":"#3A4766"} stroke={col} strokeWidth="2"/>
+    <defs><radialGradient id="hubg" cx="35%" cy="25%"><stop offset="0" stopColor="#529BD2"/><stop offset="1" stopColor="#0D6EC7"/></radialGradient></defs>
+    {hub==="it" ? <image href={LOGO} x={cx-46} y={cy-20} width="92" height="17" style={{filter:"brightness(0) invert(1)"}}/>
+      : <text x={cx} y={cy-6} textAnchor="middle" fill="#fff" fontSize="13" fontWeight="600" fontFamily="Poppins">{HUBS.find(x=>x.id===hub).n.split(" ").slice(0,2).join(" ")}</text>}
+    <text x={cx} y={cy+20} textAnchor="middle" fill="#fff" fontSize="22" fontWeight="700" fontFamily="Poppins">{score}</text>
+    <text x={cx} y={cy+36} textAnchor="middle" fill="rgba(255,255,255,.7)" fontSize="10" fontFamily="Poppins">stack health</text>
+    {active.length===0 && <text x={cx} y={H-14} textAnchor="middle" fill="#97A3B7" fontSize="12" fontFamily="Poppins">Turn on a platform to see data flow</text>}
+  </svg>;
+}
+
+function Gauges({hub,st}){
+  const h=health(hub,st), s=avg(h);
+  const color=v=>v>85?"var(--blue)":v>60?"var(--warn)":"var(--bad)";
+  return <div className="panel health">
+    <h3>{HUBS.find(x=>x.id===hub).n}: stack health</h3>
+    <div className="overall"><big style={{color:color(s)}}>{s}</big><span>Overall health with this partner model at the center</span></div>
+    {DIMS.map(d=><div className="gauge" key={d.id}>
+      <div className="l"><b>{d.n}</b><span>{h[d.id]}</span></div>
+      <div className="bar"><i style={{width:h[d.id]+"%",background:color(h[d.id])}}/></div>
+      <small>{NOTES[hub][d.id]}</small>
+    </div>)}
+  </div>;
+}
+
+function Results({st,onBack}){
+  const ranked=HUBS.map(x=>({...x,s:avg(health(x.id,st))})).sort((a,b)=>b.s-a.s);
+  const [go,setGo]=useState(false);
+  useEffect(()=>{setTimeout(()=>setGo(true),100);window.scrollTo({top:0,behavior:"smooth"})},[]);
+  const media=["dv","cm","sa"].filter(p=>st.plat.includes(p)).map(p=>PLATFORMS.find(x=>x.id===p).n);
+  const why=[
+    ["Your licenses, your data", "Every seat comes with full edit access plus data ownership and portability."],
+    media.length?[`One partner for ${media.join(", ")}`,"Certified reseller with onboarding in days, Floodlight audits and consolidated media dashboards."]
+      :["Room to grow into the full stack","Certified reseller for DV360, CM360 and SA360 when you’re ready, with Analytics 360 as the foundation."],
+    st.props>20?[`Governance across ${st.props} properties`,"Always-on monitoring and Tag Inspector scans catch tracking and consent issues at scale."]
+      :["Clean data from day one","GA4 Scorecard and Tag Inspector checks keep collection complete and compliant."],
+    st.agency>0?["Keeps your agency, removes the conflict","InfoTrust doesn’t buy media, so your agency keeps execution and you keep control."]
+      :["A team that gets stronger","Training plans and an AI Success Checklist help your team use the platforms’ AI features."],
+  ];
+  return <div className="results fade">
+    <div className="rhead">
+      <div className="rcard win">
+        <div className="eyebrow">Best fit for your stack</div>
+        <h2>Put InfoTrust at the Center</h2>
+        <p>With your platforms, spend and team, InfoTrust scored {ranked[0].s} on stack health, {ranked[0].s-ranked[1].s} points ahead of the next option.</p>
+        <a className="btn btn-primary" href={TALK} target="_blank" rel="noopener">Talk to Us</a>
+      </div>
+      <div className="rcard">
+        <h3 style={{margin:"0 0 10px",fontSize:15}}>Ranked by stack health</h3>
+        {ranked.map((r,i)=><div className={"rk"+(i===0?" top":"")} key={r.id}>
+          <span className="n">{i+1}</span>
+          <div><b style={{fontSize:14}}>{r.n}</b><small>{r.d}</small><div className="bar"><i style={{width:go?r.s+"%":0,transitionDelay:i*.12+"s"}}/></div></div>
+          <span className="p">{r.s}</span>
+        </div>)}
+      </div>
+    </div>
+    <div className="rcard">
+      <h3 style={{margin:"0 0 16px",fontSize:18}}>Why InfoTrust fits this setup</h3>
+      <div className="why" style={{gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))"}}>
+        {why.map(w=><div key={w[0]}><Check/><span><b>{w[0]}.</b> {w[1]}</span></div>)}
+      </div>
+    </div>
+    <div className="cta">
+      <div><h2>Get a Recommended Setup for Your Stack</h2><p>A GMP specialist will walk through licensing, onboarding and support options with you.</p></div>
+      <div className="b"><a className="btn btn-primary" href={TALK} target="_blank" rel="noopener">Talk to Us</a><a className="btn btn-ghost" href={GMP} target="_blank" rel="noopener">Explore GMP Services</a></div>
+    </div>
+    <p className="foot">The GMP Stack Simulator is an InfoTrust tool. Scores are illustrative. <button onClick={onBack} style={{background:"none",border:0,color:"var(--blue)",font:"inherit",cursor:"pointer"}}>Back to the simulator</button></p>
+  </div>;
+}
+
+function App(){
+  const [st,setSt]=useState({plat:["ga","dv","cm"],spend:12,props:24,exp:3,agency:1});
+  const [hub,setHub]=useState("agency");
+  const [done,setDone]=useState(false);
+  const tog=id=>setSt(s=>({...s,plat:s.plat.includes(id)?s.plat.filter(x=>x!==id):[...s.plat,id]}));
+  const set=(k,v)=>setSt(s=>({...s,[k]:v}));
+  return <>
+    <header><img className="logo" src={LOGO} alt="InfoTrust"/><span className="t">GMP Stack Simulator</span></header>
+    {!done ? <>
+    <section className="intro">
+      <div>
+        <div className="eyebrow">Google Marketing Platform</div>
+        <h1>See How Your Stack Holds Up With Each Partner Model</h1>
+        <p className="lede">Describe your setup on the left, then swap who sits at the center. Watch ownership, cost transparency, governance and enablement change in real time.</p>
+      </div>
+      <div className="steps"><span className="on">1. Build your stack</span><span className={hub?"on":""}>2. Try each partner</span><span>3. See your best fit</span></div>
+    </section>
+    <section className="grid">
+      <div className="panel">
+        <h3>Your stack</h3><p className="s">Turn on the Google platforms you use or plan to use.</p>
+        <div className="tiles">{PLATFORMS.map(p=><button key={p.id} className={"tile"+(st.plat.includes(p.id)?" on":"")} aria-pressed={st.plat.includes(p.id)} onClick={()=>tog(p.id)}><b>{p.n}</b><small>{p.s}</small></button>)}</div>
+        <div className="ctrl"><label htmlFor="sp">Annual media through Google <span>${st.spend}M{st.spend>=100?"+":""}</span></label>
+          <input id="sp" type="range" min="1" max="100" value={st.spend} onChange={e=>set("spend",+e.target.value)}/></div>
+        <div className="ctrl"><label htmlFor="pr">Sites, brands or markets <span>{st.props}{st.props>=200?"+":""}</span></label>
+          <input id="pr" type="range" min="1" max="200" value={st.props} onChange={e=>set("props",+e.target.value)}/></div>
+        <div className="ctrl"><label htmlFor="ex">Team’s GMP experience <span>{["","New","Learning","Capable","Strong","Expert"][st.exp]}</span></label>
+          <input id="ex" type="range" min="1" max="5" value={st.exp} onChange={e=>set("exp",+e.target.value)}/></div>
+        <div className="ctrl"><label>Agencies involved</label>
+          <div className="seg">{["None","One","Several"].map((l,i)=><button key={l} className={st.agency===i?"on":""} onClick={()=>set("agency",i)}>{l}</button>)}</div></div>
+      </div>
+      <div className={"stage"+(hub!=="it"?" weak":"")}>
+        <div className="hubs"><div className="lbl">Who sits at the center of your stack?</div>
+          {HUBS.map(x=><button key={x.id} className={hub===x.id?"on":""} aria-pressed={hub===x.id} onClick={()=>setHub(x.id)}>{x.n}</button>)}</div>
+        <Network hub={hub} st={st}/>
+        <p className="caption">{CAPTION[hub]}</p>
+      </div>
+      <div>
+        <Gauges hub={hub} st={st}/>
+        <button className="btn btn-primary find" onClick={()=>setDone(true)}>Show My Best Fit</button>
+      </div>
+    </section></> : <Results st={st} onBack={()=>setDone(false)}/>}
+  </>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
