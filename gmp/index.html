@@ -200,7 +200,9 @@ const FORM_PRESETS={
   ag:{need:["media","creative"],plat:["dv","sa"],spend:["s2"],foot:["f1"],own:["agency"],agency:["replace"]},
 };
 /* ---------- sim runner: a visible "ghost" cursor that clicks and swipes on its own ---------- */
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// Playback pace: 1.7x slower than the base timings; &speed=2 plays twice as fast, &speed=0.5 half as fast.
+const SLOW=1.7/Math.min(4,Math.max(.25,parseFloat(QP.get("speed"))||1));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms*SLOW));
 const SimBus=new EventTarget();
 const RUN={id:0,active:false};
 const Ghost={
@@ -208,7 +210,7 @@ const Ghost={
   get(){ if(!this.el){ const d=document.createElement("div"); d.id="ghost"; d.setAttribute("aria-hidden","true");
     d.innerHTML='<span class="rip"></span><svg width="26" height="26" viewBox="0 0 24 24"><path d="M5 2.5v17.2l4.3-4.1 2.7 6.1 2.6-1.1-2.7-6h6z" fill="#0D2B33" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
     document.body.appendChild(d); this.el=d; } return this.el; },
-  async to(x,y,ms=550){ const g=this.get(); g.style.transitionDuration=ms+"ms,200ms"; g.style.transform=`translate(${x}px,${y}px)`; g.classList.add("show"); await sleep(ms); },
+  async to(x,y,ms=550){ const g=this.get(); g.style.transitionDuration=(ms*SLOW)+"ms,200ms"; g.style.transform=`translate(${x}px,${y}px)`; g.classList.add("show"); await sleep(ms); },
   async tap(){ const g=this.get(); g.classList.add("down"); g.classList.remove("tap"); void g.offsetWidth; g.classList.add("tap"); await sleep(160); g.classList.remove("down"); await sleep(120); },
   down(on){ this.get().classList.toggle("down",on); },
   hide(){ this.el&&this.el.classList.remove("show","down"); },
@@ -454,7 +456,7 @@ function Swipe(){
   const done=ans.length===CARDS.length;
   const decide=useCallback(v=>{
     if(fly||done) return; setFly(v?1:-1);
-    setTimeout(()=>{setAns(a=>a.length<CARDS.length?[...a,v]:a);setFly(0);setDx(0);setI(x=>x+1)},300);
+    setTimeout(()=>{setAns(a=>a.length<CARDS.length?[...a,v]:a);setFly(0);setDx(0);setI(x=>x+1)},RUN.active?300*SLOW:300);
   },[fly,done]);
   useEffect(()=>{
     if(!SIM) return;
@@ -495,7 +497,7 @@ function Swipe(){
     <div className="deck">
       {nx&&<div className="card under"><div><span className="tag">{nx.tag}</span><h2>{nx.q}</h2></div></div>}
       <div className="card" key={i} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-        style={{transform:`translateX(${x}px) rotate(${x/18}deg)`,transition:start.current!==null?"none":"transform .3s cubic-bezier(.4,0,.2,1)"}}>
+        style={{transform:`translateX(${x}px) rotate(${x/18}deg)`,transition:start.current!==null?"none":`transform ${RUN.active?.3*SLOW:.3}s cubic-bezier(.4,0,.2,1)`}}>
         <span className="stamp y" style={{opacity:Math.max(0,x/100)}}>{Ic.check()} True for us</span>
         <span className="stamp n" style={{opacity:Math.max(0,-x/100)}}>{Ic.x()} Not yet</span>
         <div><span className="tag">{c.tag}</span><h2>{c.q}</h2><div className="ctx">{c.ctx}</div></div>
