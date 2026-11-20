@@ -200,9 +200,14 @@ const FORM_PRESETS={
   ag:{need:["media","creative"],plat:["dv","sa"],spend:["s2"],foot:["f1"],own:["agency"],agency:["replace"]},
 };
 /* ---------- sim runner: a visible "ghost" cursor that clicks and swipes on its own ---------- */
-// Playback pace: 1.7x slower than the base timings; &speed=2 plays twice as fast, &speed=0.5 half as fast.
-const SLOW=1.7/Math.min(4,Math.max(.25,parseFloat(QP.get("speed"))||1));
+// Playback pace. Default reads like a first-time visitor; &speed=2 plays twice as fast, &speed=0.5 half as fast.
+const PACE=Math.min(4,Math.max(.25,parseFloat(QP.get("speed"))||1));
+const SLOW=1.5/PACE;                                  // cursor moves and small mechanical gaps
 const sleep=ms=>new Promise(r=>setTimeout(r,ms*SLOW));
+const words=t=>(t||"").trim().split(/\s+/).filter(Boolean).length;
+// Reading time: ~240 wpm (250ms/word) plus a beat to think. Scanning a list of options is a bit quicker.
+const readFor=(text,think=900)=>new Promise(r=>setTimeout(r,(think+words(text)*250)/PACE));
+const scanFor=text=>new Promise(r=>setTimeout(r,words(text)*170/PACE));
 const SimBus=new EventTarget();
 const RUN={id:0,active:false};
 const Ghost={
@@ -224,12 +229,21 @@ async function ghostClick(el,chk,{click=true}={}){
   if(click){ await Ghost.tap(); chk(); el.click(); await sleep(260); }
 }
 async function finishOnInfoTrust(chk){
-  await sleep(900); chk();
+  await sleep(700); chk();
+  const path=document.querySelector(".path");
+  if(path){ path.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(450); chk();
+    const r=path.getBoundingClientRect(); await Ghost.to(r.left+40,r.top+r.height*.5); chk();
+    await readFor(path.innerText,1200); chk(); }                       // take in the verdict
+  // glance down the ranked list
+  for(const c of document.querySelectorAll(".mc .hd")){ const r=c.getBoundingClientRect(); await Ghost.to(r.left+80,r.top+r.height*.4,450); chk(); await readFor(c.querySelector(".nm").innerText,300); chk(); }
   const hd=document.querySelector('[data-pid="it"]');
-  if(hd){ await ghostClick(hd,chk); await sleep(500); chk();
+  if(hd){ await ghostClick(hd,chk); await sleep(400); chk();
+    const why=hd.parentElement.querySelector(".why"); if(why){ await readFor(why.innerText,800); chk(); }
     const cta=document.querySelector('[data-intent="review"]'); if(cta) await ghostClick(cta,chk,{click:false}); }
-  else { const ag=document.querySelector(".notfit .btn"); if(ag) await ghostClick(ag,chk,{click:false}); }
-  await sleep(1400); chk(); Ghost.hide(); simState("done");
+  else { const nf=document.querySelector(".notfit"); if(nf){ const b=nf.querySelector(".btn"); nf.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(450); chk();
+    const r=nf.getBoundingClientRect(); await Ghost.to(r.left+40,r.top+30); chk(); await readFor(nf.querySelector("p").innerText,800); chk();
+    if(b) await ghostClick(b,chk,{click:false}); } }
+  await readFor("",2200); chk(); Ghost.hide(); simState("done");
 }
 
 // order matches CARDS: media, creative, own, gov, privacy, enable, keep, big, cloud
@@ -413,9 +427,16 @@ function Questionnaire(){
     SimBus.addEventListener("skip",skip);
     const chk=startRun();
     (async()=>{try{
-      await sleep(700); chk();
-      for(const q of QS) for(const v of (FORM_PRESETS[SIM][q.id]||[])){
-        const el=document.querySelector(`[data-chip="${q.id}:${v}"]`); if(el) await ghostClick(el,chk);
+      await readFor("",1500); chk();                                   // land on the page
+      for(const q of QS){
+        const box=document.querySelector(`[data-q="${q.id}"]`);
+        if(box){ box.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(450); chk();
+          const r=box.querySelector("h3").getBoundingClientRect(); await Ghost.to(r.left+Math.min(r.width,220),r.top+r.height/2); chk();
+          await readFor(q.t+" "+q.h,700); chk();                        // read the question
+          await scanFor(q.o.map(o=>o[1]).join(" ")); chk(); }           // scan the options
+        for(const v of (FORM_PRESETS[SIM][q.id]||[])){
+          const el=document.querySelector(`[data-chip="${q.id}:${v}"]`); if(el){ await ghostClick(el,chk); await readFor("",500); chk(); }
+        }
       }
       await finishOnInfoTrust(chk);
     }catch(e){}})();
@@ -432,7 +453,7 @@ function Questionnaire(){
   const summary=QS.map(q=>(a[q.id]||[]).length?`${q.t} ${(a[q.id]).map(v=>q.o.find(o=>o[0]===v)[1]).join(", ")}`:null).filter(Boolean).join(" | ");
   return <div className="qa">
     <div className="panel">
-      {QS.map(q=><div className="q" key={q.id}>
+      {QS.map(q=><div className="q" key={q.id} data-q={q.id}>
         <h3>{q.t}</h3>{q.h&&<p>{q.h}</p>}
         <div className="chips" role={q.multi?"group":"radiogroup"} aria-label={q.t}>
           {q.o.map(([v,l])=>{const on=(a[q.id]||[]).includes(v);return <button key={v} data-chip={q.id+":"+v} className={"chip "+(q.multi?"multi":"radio")+(on?" on":"")}
@@ -465,12 +486,13 @@ function Swipe(){
     SimBus.addEventListener("skip",skip);
     const chk=startRun();
     (async()=>{try{
-      await sleep(600); chk();
+      await readFor("",1500); chk();                                   // land on the page
       document.querySelector(".deck").scrollIntoView({behavior:"smooth",block:"center"}); await sleep(500);
       for(let k=0;k<CARDS.length;k++){
         chk(); const card=document.querySelector(".deck .card:not(.under)"); if(!card) break;
         const r=card.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height*.45, dir=pre[k]?1:-1;
-        await Ghost.to(cx,cy,k?380:600); chk(); await sleep(450); chk();   // pause to "read" the card
+        await readFor(CARDS[k].q+" "+CARDS[k].ctx,800); chk();          // read the statement, then decide
+        await Ghost.to(cx,cy,k?380:600); chk(); await sleep(250); chk();
         Ghost.down(true); setDx(dir*170); await Ghost.to(cx+dir*170,cy+12,320); chk();
         decide(pre[k]); Ghost.down(false); await sleep(420);
       }
