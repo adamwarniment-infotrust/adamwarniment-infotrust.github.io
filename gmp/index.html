@@ -147,6 +147,19 @@ form.lead textarea{min-height:70px;resize:vertical}
 .beta a[aria-current]{font-weight:700;text-decoration:none;border-bottom:2px solid var(--accent)}
 .beta .bs{display:inline-flex;align-items:center;gap:4px;opacity:.8}
 .beta .bs.on{opacity:1;font-weight:600}
+#ghost{position:fixed;left:0;top:0;z-index:9999;pointer-events:none;opacity:0;transform:translate(50vw,105vh);
+  transition-property:transform,opacity;transition-duration:550ms,200ms;transition-timing-function:cubic-bezier(.45,0,.2,1)}
+#ghost.show{opacity:1}
+#ghost svg{display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));transform-origin:5px 3px;transition:transform .12s}
+#ghost.down svg{transform:scale(.82)}
+#ghost .rip{position:absolute;left:-13px;top:-13px;width:32px;height:32px;border-radius:50%;border:3px solid var(--sea);opacity:0}
+#ghost.tap .rip{animation:rip .5s ease-out}
+@keyframes rip{from{opacity:.95;transform:scale(.3)}to{opacity:0;transform:scale(1.7)}}
+.simtoast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:9998;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100vw - 32px);background:var(--ink);color:var(--bg);font-size:13px;padding:9px 10px 9px 16px;border-radius:100px;box-shadow:0 10px 30px var(--shadow)}
+.simtoast button{font:600 12.5px "DM Sans",sans-serif;background:var(--accent);color:var(--accent-ink);border:0;border-radius:100px;padding:7px 12px;cursor:pointer}
+.dotlive{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
 .foot{font-size:12px;color:var(--ink-3);text-align:center;max-width:70ch;margin:34px auto 0;line-height:1.6}
 .rise{animation:rise .5s cubic-bezier(.4,0,.2,1) both}@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @media (max-width:960px){.qa{grid-template-columns:1fr}.side{position:static}}
@@ -186,6 +199,37 @@ const FORM_PRESETS={
   ent:{need:["license","audit"],plat:["ga","dv","cm","sa"],spend:["s4"],foot:["f4"],own:["us"],agency:["keep"]},
   ag:{need:["media","creative"],plat:["dv","sa"],spend:["s2"],foot:["f1"],own:["agency"],agency:["replace"]},
 };
+/* ---------- sim runner: a visible "ghost" cursor that clicks and swipes on its own ---------- */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const SimBus=new EventTarget();
+const RUN={id:0,active:false};
+const Ghost={
+  el:null,
+  get(){ if(!this.el){ const d=document.createElement("div"); d.id="ghost"; d.setAttribute("aria-hidden","true");
+    d.innerHTML='<span class="rip"></span><svg width="26" height="26" viewBox="0 0 24 24"><path d="M5 2.5v17.2l4.3-4.1 2.7 6.1 2.6-1.1-2.7-6h6z" fill="#0D2B33" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+    document.body.appendChild(d); this.el=d; } return this.el; },
+  async to(x,y,ms=550){ const g=this.get(); g.style.transitionDuration=ms+"ms,200ms"; g.style.transform=`translate(${x}px,${y}px)`; g.classList.add("show"); await sleep(ms); },
+  async tap(){ const g=this.get(); g.classList.add("down"); g.classList.remove("tap"); void g.offsetWidth; g.classList.add("tap"); await sleep(160); g.classList.remove("down"); await sleep(120); },
+  down(on){ this.get().classList.toggle("down",on); },
+  hide(){ this.el&&this.el.classList.remove("show","down"); },
+};
+function simState(s){ RUN.active=s==="running"; SimBus.dispatchEvent(new CustomEvent("state",{detail:s})); }
+function stopSim(){ if(!RUN.active) return; RUN.id++; Ghost.hide(); simState("stopped"); }
+function startRun(){ const id=++RUN.id; simState("running"); const chk=()=>{ if(RUN.id!==id) throw new Error("sim stopped"); }; return chk; }
+async function ghostClick(el,chk,{click=true}={}){
+  el.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(480); chk();
+  const r=el.getBoundingClientRect(); await Ghost.to(r.left+Math.min(r.width*.5,60),r.top+r.height*.55); chk();
+  if(click){ await Ghost.tap(); chk(); el.click(); await sleep(260); }
+}
+async function finishOnInfoTrust(chk){
+  await sleep(900); chk();
+  const hd=document.querySelector('[data-pid="it"]');
+  if(hd){ await ghostClick(hd,chk); await sleep(500); chk();
+    const cta=document.querySelector('[data-intent="review"]'); if(cta) await ghostClick(cta,chk,{click:false}); }
+  else { const ag=document.querySelector(".notfit .btn"); if(ag) await ghostClick(ag,chk,{click:false}); }
+  await sleep(1400); chk(); Ghost.hide(); simState("done");
+}
+
 // order matches CARDS: media, creative, own, gov, privacy, enable, keep, big, cloud
 const SWIPE_PRESETS={
   it:[false,false,true,true,true,true,true,false,false],
@@ -323,7 +367,7 @@ function MatchCard({row,rank,m,summary,go,open,setOpen}){
   const why=isIt?m.itWhy:[[null,WHY[m.path][row.id]]];
   // Brand emphasis only when InfoTrust is the #1 match; at #2 it looks like every other card.
   return <div className={"mc"+(isIt&&rank===0?" lean":"")}>
-    <button className="hd" aria-expanded={open} onClick={()=>setOpen(open?null:row.id)}>
+    <button className="hd" data-pid={row.id} aria-expanded={open} onClick={()=>setOpen(open?null:row.id)}>
       <span className="rk">{rank+1}</span>
       <span className="nm"><span className="pn"><img className="plogo" src={p.logo} alt="" width="34" height="34"/>{p.n}</span><small>{p.d}</small></span>
       <span className="pct">{row.s}%<small>match</small></span>
@@ -333,7 +377,7 @@ function MatchCard({row,rank,m,summary,go,open,setOpen}){
     {open&&<div className="body rise">
       <ul className="why">{why.map((w,i)=><li key={i}>{Ic.check()}<span>{w[0]&&<b>{w[0]}. </b>}{w[1]}</span></li>)}</ul>
       {isIt
-        ? <><div className="acts">{INTENTS.map(([k,l])=><button key={k} className={"btn "+(k==="review"?"btn-acc":"btn-ghost")} aria-pressed={intent===k} onClick={()=>setIntent(k)}>{l}</button>)}</div>
+        ? <><div className="acts">{INTENTS.map(([k,l])=><button key={k} data-intent={k} className={"btn "+(k==="review"?"btn-acc":"btn-ghost")} aria-pressed={intent===k} onClick={()=>setIntent(k)}>{l}</button>)}</div>
             {intent&&<LeadForm key={intent} intent={intent} summary={summary} onClose={()=>setIntent(null)}/>}</>
         : <div className="acts"><a className="btn btn-ghost" href={p.url} target="_blank" rel="noopener">Visit {p.n} {Ic.out}</a></div>}
     </div>}
@@ -360,7 +404,21 @@ function Results({s,summary}){
 
 /* ---------- modes ---------- */
 function Questionnaire(){
-  const [a,setA]=useState(()=>SIM?FORM_PRESETS[SIM]:{});
+  const [a,setA]=useState({});
+  useEffect(()=>{
+    if(!SIM) return;
+    const skip=()=>{stopSim();setA(FORM_PRESETS[SIM]);simState("done")};
+    SimBus.addEventListener("skip",skip);
+    const chk=startRun();
+    (async()=>{try{
+      await sleep(700); chk();
+      for(const q of QS) for(const v of (FORM_PRESETS[SIM][q.id]||[])){
+        const el=document.querySelector(`[data-chip="${q.id}:${v}"]`); if(el) await ghostClick(el,chk);
+      }
+      await finishOnInfoTrust(chk);
+    }catch(e){}})();
+    return()=>{SimBus.removeEventListener("skip",skip);stopSim()};
+  },[]);
   const tog=(q,v)=>setA(x=>{
     const cur=x[q.id]||[];
     if(!q.multi) return {...x,[q.id]:cur[0]===v?[]:[v]};
@@ -375,7 +433,7 @@ function Questionnaire(){
       {QS.map(q=><div className="q" key={q.id}>
         <h3>{q.t}</h3>{q.h&&<p>{q.h}</p>}
         <div className="chips" role={q.multi?"group":"radiogroup"} aria-label={q.t}>
-          {q.o.map(([v,l])=>{const on=(a[q.id]||[]).includes(v);return <button key={v} className={"chip "+(q.multi?"multi":"radio")+(on?" on":"")}
+          {q.o.map(([v,l])=>{const on=(a[q.id]||[]).includes(v);return <button key={v} data-chip={q.id+":"+v} className={"chip "+(q.multi?"multi":"radio")+(on?" on":"")}
             role={q.multi?"checkbox":"radio"} aria-checked={on} onClick={()=>tog(q,v)}><span className="bx"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>{q.id==="plat"&&PROD[v]&&<img className="cico" src={PROD[v][0]} alt="" width="18" height="18"/>}{l}</button>})}
         </div>
       </div>)}
@@ -391,13 +449,33 @@ function Questionnaire(){
 }
 
 function Swipe(){
-  const [ans,setAns]=useState(()=>SIM?SWIPE_PRESETS[SIM]:[]); const [i,setI]=useState(()=>SIM?CARDS.length:0);
+  const [ans,setAns]=useState([]); const [i,setI]=useState(0);
   const [dx,setDx]=useState(0); const [fly,setFly]=useState(0); const start=useRef(null);
   const done=ans.length===CARDS.length;
   const decide=useCallback(v=>{
     if(fly||done) return; setFly(v?1:-1);
-    setTimeout(()=>{setAns(a=>[...a,v]);setFly(0);setDx(0);setI(x=>x+1)},300);
+    setTimeout(()=>{setAns(a=>a.length<CARDS.length?[...a,v]:a);setFly(0);setDx(0);setI(x=>x+1)},300);
   },[fly,done]);
+  useEffect(()=>{
+    if(!SIM) return;
+    const pre=SWIPE_PRESETS[SIM];
+    const skip=()=>{stopSim();setFly(0);setDx(0);setAns(pre);setI(CARDS.length);simState("done")};
+    SimBus.addEventListener("skip",skip);
+    const chk=startRun();
+    (async()=>{try{
+      await sleep(600); chk();
+      document.querySelector(".deck").scrollIntoView({behavior:"smooth",block:"center"}); await sleep(500);
+      for(let k=0;k<CARDS.length;k++){
+        chk(); const card=document.querySelector(".deck .card:not(.under)"); if(!card) break;
+        const r=card.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height*.45, dir=pre[k]?1:-1;
+        await Ghost.to(cx,cy,k?380:600); chk(); await sleep(450); chk();   // pause to "read" the card
+        Ghost.down(true); setDx(dir*170); await Ghost.to(cx+dir*170,cy+12,320); chk();
+        decide(pre[k]); Ghost.down(false); await sleep(420);
+      }
+      await finishOnInfoTrust(chk);
+    }catch(e){}})();
+    return()=>{SimBus.removeEventListener("skip",skip);stopSim()};
+  },[]);
   useEffect(()=>{const k=e=>{if(e.key==="ArrowRight")decide(true);if(e.key==="ArrowLeft")decide(false)};window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k)},[decide]);
   useEffect(()=>{if(done) window.scrollTo({top:0,behavior:"smooth"})},[done]);
   if(done){
@@ -440,7 +518,22 @@ function App(){
   useEffect(()=>{try{localStorage.setItem("gmp-mode",mode)}catch{}},[mode]);
   const M=[["swipe","Swipe cards"],["form","Questionnaire"]];
   const SIMS=[["it","InfoTrust #1"],["ent","Enterprise (InfoTrust #2)"],["ag","Media agency"]];
+  const [sim,setSim]=useState(SIM?"running":null);
+  useEffect(()=>{
+    if(!SIM) return;
+    const on=e=>setSim(e.detail);
+    // Any real click or key press hands control back to the tester.
+    const take=e=>{ if(e.isTrusted&&RUN.active&&!(e.target.closest&&e.target.closest(".simtoast"))) stopSim(); };
+    SimBus.addEventListener("state",on); window.addEventListener("pointerdown",take,true); window.addEventListener("keydown",take,true);
+    return()=>{SimBus.removeEventListener("state",on);window.removeEventListener("pointerdown",take,true);window.removeEventListener("keydown",take,true)};
+  },[]);
+  const simName=SIM&&SIMS.find(s=>s[0]===SIM)[1];
   return <>
+    {SIM&&sim&&<div className="simtoast" role="status">
+      {sim==="running"?<><span className="dotlive"/>Simulating: {simName}. Click anywhere to take over.
+        <button onClick={()=>SimBus.dispatchEvent(new Event("skip"))}>Skip to results</button></>
+       :<>{sim==="done"?"Simulation finished.":"You’ve taken over."}<button onClick={()=>location.reload()}>Replay</button></>}
+    </div>}
     {BETA&&<div className="beta" role="navigation" aria-label="Beta pathway simulator">
       <b>Beta · simulate a pathway</b>
       {SIMS.map(([k,l])=><span key={k} className={"bs"+(SIM===k?" on":"")}>{SIM===k&&Ic.check(12)}{l}:
