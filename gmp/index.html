@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>GMP Partner Match</title>
+<title>GMP Partner Finder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
@@ -11,9 +11,8 @@
 <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.7/babel.min.js"></script>
 <style>
-/* Palette: teal/sea-green base (analogous to blue, so blue reads as the harmonious "right" answer),
-   a cerulean "sea" tone reserved for the top match, and a warm apricot accent for actions.
-   No red anywhere. Every color state also carries an icon, label or pattern. */
+/* Own brand (not InfoTrust's): teal/sea-green base, cerulean for the publisher's pick, apricot for actions.
+   No red. Every color state also carries an icon, label or pattern. No Google or partner logos. */
 :root{
   --bg:#F3FAF8; --bg-2:#E6F3EF; --card:#FFFFFF; --ink:#0D2B33; --ink-2:#36545A; --ink-3:#5A777C; --ink-4:#8EA6A9;
   --line:#D3E5E1; --line-2:#E3EFEC;
@@ -38,15 +37,26 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg-2));min-height:100vh;color:var(--ink);font-family:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 :focus-visible{outline:3px solid var(--sea);outline-offset:2px}
-header{display:flex;justify-content:space-between;align-items:center;padding:18px clamp(16px,5vw,56px)}
-.mark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-.01em}
-.mark i{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--teal),var(--sea));display:block}
-header small{color:var(--ink-3);font-size:13px}
+a{color:var(--sea)}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px clamp(16px,5vw,56px)}
+.mark{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{font-size:14px;font-weight:600;color:var(--ink-2);text-decoration:none;padding:7px 12px;border-radius:100px}
+nav a[aria-current]{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.disc{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--ink-2);background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px clamp(16px,5vw,56px)}
+.disc svg{color:var(--teal);flex:none}
 .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,32px) 60px}
-.hero{padding:24px 0 8px;max-width:760px}
+.hero{padding:24px 0 8px;max-width:780px}
 .eyebrow{font-size:12px;letter-spacing:1.3px;text-transform:uppercase;color:var(--teal);font-weight:700}
-h1{font-size:clamp(30px,4.6vw,48px);line-height:1.08;letter-spacing:-.025em;margin:10px 0 12px}
+h1{font-size:clamp(30px,4.6vw,46px);line-height:1.08;letter-spacing:-.025em;margin:10px 0 12px}
+h2.sec{font-size:22px;letter-spacing:-.01em;margin:28px 0 10px}
 .lede{font-size:17px;line-height:1.6;color:var(--ink-2);margin:0}
+/* squircle icons (products and partner monograms) */
+.sq{display:inline-grid;place-items:center;flex:none;width:var(--s,34px);height:var(--s,34px);position:relative;color:#fff;font-weight:700;font-size:calc(var(--s,34px)*.4);letter-spacing:-.02em}
+.sq svg{position:absolute;inset:0;width:100%;height:100%}
+.sq b{position:relative;font-weight:700}
+.prods{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.prods span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--ink-2);background:var(--card);border:1px solid var(--line);border-radius:100px;padding:4px 12px 4px 5px}
 /* mode toggle */
 .modes{display:inline-flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:100px;padding:4px;margin:22px 0 6px}
 .modes label{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;padding:9px 16px;border-radius:100px;cursor:pointer;color:var(--ink-2)}
@@ -54,14 +64,14 @@ h1{font-size:clamp(30px,4.6vw,48px);line-height:1.08;letter-spacing:-.025em;marg
 .modes label.on{background:var(--teal-soft);color:var(--ink)}
 .mhint{font-size:13px;color:var(--ink-3);margin:0 0 18px}
 /* questionnaire */
-.qa{display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:start}
+.qa{display:grid;grid-template-columns:1fr 440px;gap:28px;align-items:start}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:clamp(18px,3vw,28px)}
 .q{padding:18px 0;border-top:1px solid var(--line-2)}
 .q:first-child{border-top:0;padding-top:0}
 .q h3{margin:0 0 4px;font-size:16px}
 .q p{margin:0 0 12px;font-size:13px;color:var(--ink-3)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{font:inherit;font-size:14px;display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:100px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;transition:all .15s}
+.chip{font:inherit;font-size:14px;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:100px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;transition:all .15s}
 .chip:hover{border-color:var(--ink-4)}
 .chip .bx{width:16px;height:16px;border:1.5px solid var(--ink-4);display:grid;place-items:center;flex:none}
 .chip.radio .bx{border-radius:50%} .chip.multi .bx{border-radius:4px}
@@ -73,9 +83,8 @@ h1{font-size:clamp(30px,4.6vw,48px);line-height:1.08;letter-spacing:-.025em;marg
 /* swipe */
 .check{max-width:560px;margin:0 auto;text-align:center}
 .prog{display:flex;gap:5px;justify-content:center;margin:6px 0 22px}
-.prog i{width:26px;height:6px;border-radius:6px;background:var(--line)}
-.prog i.c{background:var(--ink-4)}
-.prog i.y{background:var(--teal)}
+.prog i{width:24px;height:6px;border-radius:6px;background:var(--line)}
+.prog i.c{background:var(--ink-4)} .prog i.y{background:var(--teal)}
 .prog i.n{background:repeating-linear-gradient(135deg,var(--accent) 0 3px,var(--accent-soft) 3px 6px)}
 .deck{position:relative;height:380px;max-width:420px;margin:0 auto;touch-action:pan-y}
 .card{position:absolute;inset:0;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 40px 70px var(--shadow);padding:28px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;user-select:none;cursor:grab}
@@ -89,59 +98,87 @@ h1{font-size:clamp(30px,4.6vw,48px);line-height:1.08;letter-spacing:-.025em;marg
 .choice{font:600 15px "DM Sans",sans-serif;height:50px;padding:0 22px;border-radius:100px;cursor:pointer;background:var(--card);border:1.5px solid var(--line);color:var(--ink);display:inline-flex;align-items:center;gap:8px}
 .choice.n:hover{border-color:var(--accent)} .choice.y:hover{border-color:var(--teal)}
 .kbd{font-size:12.5px;color:var(--ink-4);margin-top:12px}
+.cicons{display:flex;gap:6px}
 /* results */
-.path{display:flex;gap:14px;align-items:flex-start;border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--line)}
+.rdisc{font-size:12.5px;color:var(--ink-2);background:var(--card);border:1px dashed var(--ink-4);border-radius:10px;padding:8px 12px;margin-bottom:12px;line-height:1.5}
+.path{display:flex;gap:14px;align-items:flex-start;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid var(--line)}
 .path .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}
 .path b{display:block;font-size:16px;margin-bottom:3px}
 .path span{font-size:14px;color:var(--ink-2);line-height:1.5}
-.path.it{background:var(--sea-soft)} .path.it .ic{background:var(--sea)}
+.path.std{background:var(--sea-soft)} .path.std .ic{background:var(--sea)}
 .path.ent{background:var(--teal-soft)} .path.ent .ic{background:var(--teal)}
 .path.ag{background:var(--accent-soft)} .path.ag .ic{background:var(--accent);color:var(--accent-ink)}
-.empty{color:var(--ink-3);font-size:14px;line-height:1.6;padding:8px 0}
-.mc{border:1.5px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--card);overflow:hidden;transition:border-color .2s}
+.empty{color:var(--ink-3);font-size:14px;line-height:1.6}
+.mc{border:1.5px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--card)}
 .mc.lean{border-color:var(--sea)}
 .mc>button.hd{all:unset;box-sizing:border-box;display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;width:100%;padding:14px 16px;cursor:pointer}
-.mc>button.hd:focus-visible{outline:3px solid var(--sea);outline-offset:-3px}
+.mc>button.hd:focus-visible{outline:3px solid var(--sea);outline-offset:-3px;border-radius:14px}
 .rk{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;background:var(--line-2);color:var(--ink-2)}
 .mc.lean .rk{background:var(--sea);color:#fff}
-.nm{font-weight:700;font-size:15.5px}
-.nm small{display:block;font-weight:400;color:var(--ink-3);font-size:12.5px;line-height:1.4;margin-top:2px}
+.nm{font-weight:700;font-size:15.5px;min-width:0}
+.pn{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nm small{display:block;font-weight:400;color:var(--ink-3);font-size:12.5px;line-height:1.4;margin-top:3px}
 .pct{font-weight:700;font-size:17px;text-align:right}
 .pct small{display:block;font-size:11px;color:var(--ink-3);font-weight:500}
 .bar{grid-column:2/-1;height:6px;border-radius:6px;background:var(--line-2);overflow:hidden}
 .bar i{display:block;height:100%;border-radius:6px;background:var(--ink-4);transition:width .8s cubic-bezier(.4,0,.2,1)}
 .mc.lean .bar i{background:var(--sea)}
+.pick{position:relative;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--sea);background:var(--sea-soft);border:1px solid var(--sea);padding:2px 8px;border-radius:100px;cursor:help}
+.pick .tip{position:absolute;left:0;top:calc(100% + 6px);width:260px;z-index:20;background:var(--ink);color:var(--bg);font-weight:400;font-size:12.5px;line-height:1.45;padding:10px 12px;border-radius:10px;box-shadow:0 10px 30px var(--shadow);opacity:0;pointer-events:none;transition:opacity .15s}
+.pick:hover .tip,.pick:focus .tip{opacity:1}
+.draft{font-size:11px;font-weight:600;color:var(--ink-3);border:1px dashed var(--ink-4);padding:1px 7px;border-radius:100px}
 .body{padding:0 16px 16px 58px}
 .why{margin:0;padding:0;list-style:none}
 .why li{display:flex;gap:8px;font-size:13.5px;color:var(--ink-2);line-height:1.5;margin-bottom:6px}
 .why li svg{flex:none;margin-top:3px;color:var(--teal)}
-.why li b{color:var(--ink)}
+.src{font-size:12px;color:var(--ink-3);margin-top:8px;line-height:1.5}
 .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .btn{font:600 14px "DM Sans",sans-serif;height:42px;padding:0 18px;border-radius:100px;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:7px;text-decoration:none}
 .btn-acc{background:var(--accent);color:var(--accent-ink)} .btn-acc:hover{filter:brightness(1.05)}
 .btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)} .btn-ghost:hover{border-color:var(--ink-4)}
 .more{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:5px;padding:0 16px 12px 58px}
-/* form */
+.notfit{border:1.5px dashed var(--ink-4);border-radius:14px;padding:16px;margin:6px 0 10px;background:var(--card)}
+.notfit .t{display:flex;gap:8px;align-items:center;font-weight:700;font-size:15px;margin-bottom:6px}
+.notfit p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.55}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.box h3{margin:0 0 8px;font-size:15px}
+.box ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2);line-height:1.55}
+.box .s{font-size:12px;color:var(--ink-3);margin:8px 0 0}
+/* tables */
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:440px}
+th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--line-2);vertical-align:top}
+th{font-size:12px;color:var(--ink-3);font-weight:600}
+td .y{color:var(--teal);display:inline-flex;align-items:center;gap:4px;font-weight:600}
+td .n{color:var(--ink-4)}
+/* forms */
 form.lead{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px}
 form.lead .full{grid-column:1/-1}
 form.lead label{font-size:12px;font-weight:600;color:var(--ink-2);display:grid;gap:4px}
-form.lead input,form.lead textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px}
+form.lead label.cb{display:flex;gap:8px;align-items:flex-start;font-weight:500;font-size:12.5px;line-height:1.45}
+form.lead label.cb input{margin-top:2px;accent-color:var(--teal)}
+form.lead input:not([type=checkbox]),form.lead textarea,form.lead select{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px}
 form.lead textarea{min-height:70px;resize:vertical}
 .note{font-size:13px;color:var(--ink-2);line-height:1.5;background:var(--teal-soft);border-radius:10px;padding:12px}
-.notfit{border:1.5px dashed var(--ink-4);border-radius:14px;padding:16px;margin-top:6px}
-.notfit .t{display:flex;gap:8px;align-items:center;font-weight:700;font-size:15px;margin-bottom:6px}
-.notfit p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.55}
-.res-full{max-width:760px;margin:0 auto}
-.res-full .again{display:flex;justify-content:center;margin-top:18px}
-.pn{display:flex;align-items:center;gap:10px}
-.plogo{width:34px;height:34px;border-radius:9px;object-fit:contain;background:#fff;border:1px solid var(--line);padding:3px;flex:none}
-.notfit .plogo{width:28px;height:28px;padding:2px}
-.cico{width:18px;height:18px;object-fit:contain}
-.cicons{display:flex;gap:6px}
-.cicons img{width:30px;height:30px;object-fit:contain;pointer-events:none}
-.prods{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.prods span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--ink-2);background:var(--card);border:1px solid var(--line);border-radius:100px;padding:5px 12px 5px 6px}
-.prods img{width:22px;height:22px;object-fit:contain}
+/* browse */
+.browse{display:grid;grid-template-columns:280px 1fr;gap:24px;align-items:start}
+.filters .grp{margin-bottom:16px}
+.filters h4{margin:0 0 8px;font-size:13px}
+.filters label{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--ink-2);padding:3px 0;cursor:pointer}
+.filters input[type=checkbox]{accent-color:var(--teal)}
+.search{width:100%;font:inherit;font-size:15px;padding:11px 14px;border-radius:100px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);margin-bottom:14px}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:10px}
+.pcard .top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.pcard .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pcard .tags span{font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:100px;padding:3px 9px;color:var(--ink-2)}
+.cmpbox{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.cmpbox input{accent-color:var(--teal)}
+.count{font-size:13px;color:var(--ink-3);margin:0 0 10px}
+/* method */
+.doc{max-width:820px}
+.doc p,.doc li{font-size:15px;line-height:1.65;color:var(--ink-2)}
+.doc h2{margin-top:30px}
+/* beta + sim */
 .beta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12.5px;padding:8px clamp(16px,5vw,56px);background:var(--ink);color:var(--bg)}
 .beta a{color:var(--bg);margin-left:6px}
 .beta a[aria-current]{font-weight:700;text-decoration:none;border-bottom:2px solid var(--accent)}
@@ -160,9 +197,9 @@ form.lead textarea{min-height:70px;resize:vertical}
 .simtoast button{font:600 12.5px "DM Sans",sans-serif;background:var(--accent);color:var(--accent-ink);border:0;border-radius:100px;padding:7px 12px;cursor:pointer}
 .dotlive{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:blink 1s ease-in-out infinite}
 @keyframes blink{50%{opacity:.25}}
-.foot{font-size:12px;color:var(--ink-3);text-align:center;max-width:70ch;margin:34px auto 0;line-height:1.6}
+.foot{font-size:12px;color:var(--ink-3);text-align:center;max-width:78ch;margin:34px auto 0;line-height:1.6}
 .rise{animation:rise .5s cubic-bezier(.4,0,.2,1) both}@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-@media (max-width:960px){.qa{grid-template-columns:1fr}.side{position:static}}
+@media (max-width:960px){.qa,.browse{grid-template-columns:1fr}.side{position:static}}
 @media (max-width:520px){.body,.more{padding-left:16px}form.lead{grid-template-columns:1fr}.modes label{padding:9px 12px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -172,40 +209,197 @@ form.lead textarea{min-height:70px;resize:vertical}
 <script type="text/babel" data-presets="react">
 const {useState,useEffect,useRef,useCallback,useMemo}=React;
 
-// Where InfoTrust lead forms POST (JSON). Leave empty and the form says it isn't connected yet.
-const FORM_ENDPOINT="";
+/* ================= config ================= */
+const FORM_ENDPOINT="";                       // InfoTrust marketing form endpoint (JSON POST). Empty = not wired.
 const IT_CONTACT="https://infotrust.com/talk-to-us/";
+const PRIVACY_URL="https://infotrust.com/infotrust-cookie-privacy-policy/";
+const GDIR="https://marketingplatform.google.com/about/partners/find-a-partner";
+const CHECKED="2026-11-23";
+const PUB=6;            // publisher weighting added to InfoTrust's score (disclosed)
+const IT_MIN=60;        // InfoTrust must reach this fit before weighting to appear at all
+const SHOW_MIN=55;      // any partner below this fit is left off the shortlist
+const CORRECTION_OWNER="Partner Finder team at InfoTrust (named owner TBD)";
 
-/* ---------- partners (verify names, URLs and one-liners before launch) ---------- */
-const P={
-  it:{n:"InfoTrust",logo:"logos/infotrust.png",url:"https://infotrust.com/",d:"Independent Google Marketing Platform partner for licensing, data governance, privacy and team enablement. Doesn’t buy media."},
-  cp:{n:"Cardinal Path",logo:"logos/cardinalpath-mark.svg",url:"https://www.cardinalpath.com/",d:"Large analytics and marketing technology consultancy and Google Marketing Platform partner."},
-  aw:{n:"Adswerve",logo:"logos/adswerve.png",url:"https://adswerve.com/",d:"Google Marketing Platform and Google Cloud partner with data and media services."},
-  mm:{n:"Monks",logo:"logos/monks.png",url:"https://www.monks.com/",d:"Global digital agency covering media, creative and data."},
-  ti:{n:"Tinuiti",logo:"logos/tinuiti.png",url:"https://tinuiti.com/",d:"Performance marketing agency across search, social, programmatic and commerce media."},
-  wp:{n:"Wpromote",logo:"logos/wpromote.svg",url:"https://www.wpromote.com/",d:"Performance marketing agency covering paid media, creative and analytics."},
+/* ================= taxonomy ================= */
+const LIC={ga:"Analytics 360",dv:"Display & Video 360",cm:"Campaign Manager 360",sa:"Search Ads 360"};
+const SVC={ // [label, weight]. Weights are published on the methodology page.
+  impl:["Implementation and setup",1.5], gov:["Data quality and governance",2], privacy:["Privacy and consent",2],
+  train:["Training and enablement",1], cloud:["BigQuery and Google Cloud",1], switch:["Reseller switch support",1.5],
+  media:["Media buying",1], creative:["Creative production",1],
 };
-/* Google Marketing Platform product icons */
-const PROD={ga:["logos/ga.png","Analytics 360"],dv:["logos/dv360.png","Display & Video 360"],cm:["logos/cm360.png","Campaign Manager 360"],
-  sa:["logos/sa360.png","Search Ads 360"],bq:["logos/bigquery.png","BigQuery"],gmp:["logos/gmp.png","Google Marketing Platform"]};
+const REG={na:"North America",emea:"Europe, Middle East and Africa",apac:"Asia-Pacific",latam:"Latin America"};
+const SCALE={1:"Mid-market",2:"Enterprise",3:"Global enterprise"};
 
-/* ---------- beta: ?sim=it|ent|ag  (&mode=swipe|form) prefills answers for each pathway ---------- */
+/* ================= partner catalog (public claims, DRAFT: verify each before launch) ================= */
+const site=(u,l="Partner website")=>[l,u];
+const CAT=[
+  {id:"it",n:"InfoTrust",hq:"Cincinnati, OH, US",cc:"US",lic:["ga","dv","cm"],svc:["impl","gov","privacy","train","cloud","switch"],reg:["na","emea"],scale:2,
+   note:"GMP Sales Partner focused on analytics, privacy and data quality. Doesn’t buy media.",url:"https://infotrust.com/",src:[site("https://infotrust.com/")]},
+  {id:"cp",n:"Merkle / Cardinal Path",hq:"Chicago, IL, US",cc:"US",lic:["ga","dv","cm","sa"],svc:["impl","gov","privacy","train","media","creative","cloud","switch"],reg:["na","emea","apac","latam"],scale:3,
+   note:"Full-stack GMP reseller (part of dentsu) covering media and data at scale.",url:"https://www.cardinalpath.com/",src:[site("https://www.cardinalpath.com/")]},
+  {id:"bn",n:"Bounteous",hq:"Chicago, IL, US",cc:"US",lic:["ga","dv","cm","sa"],svc:["impl","privacy","train","media","creative","cloud","switch"],reg:["na","emea","apac"],scale:2,
+   note:"GMP Sales Partner and Google Cloud partner working from analytics through activation.",url:"https://www.bounteous.com/",src:[site("https://www.bounteous.com/")]},
+  {id:"mk",n:"Monks",hq:"Amsterdam, Netherlands",cc:"Netherlands",lic:["ga","dv","cm","sa"],svc:["impl","train","media","creative","cloud","switch"],reg:["na","emea","apac","latam"],scale:3,
+   note:"GMP Sales and Service Partner (formerly Media.Monks) with global delivery.",url:"https://www.monks.com/",src:[site("https://www.monks.com/")]},
+  {id:"aw",n:"Adswerve",hq:"Denver, CO, US",cc:"US",lic:["ga","dv","cm","sa"],svc:["impl","gov","train","media","cloud","switch"],reg:["na","emea"],scale:2,
+   note:"GMP and Google Cloud specialist.",url:"https://adswerve.com/",src:[site("https://adswerve.com/")]},
+  {id:"fu",n:"Further",hq:"Atlanta, GA, US",cc:"US",lic:["ga"],svc:["impl","gov","privacy","train","cloud"],reg:["na"],scale:2,
+   note:"Data and analytics consultancy (formerly Search Discovery).",url:"https://further.ai/",src:[site("https://further.ai/")]},
+  {id:"jf",n:"Jellyfish",hq:"London, UK",cc:"UK",lic:["ga","dv","cm","sa"],svc:["impl","train","media","creative","cloud"],reg:["na","emea","apac","latam"],scale:3,
+   note:"Global digital partner covering media, data and training.",url:"https://www.jellyfish.com/",src:[site("https://www.jellyfish.com/")]},
+  {id:"ba",n:"Blast Analytics",hq:"Rocklin, CA, US",cc:"US",lic:["ga"],svc:["impl","gov","privacy","train"],reg:["na"],scale:1,
+   note:"Analytics consultancy focused on implementation and data quality.",url:"https://www.blastanalytics.com/",src:[site("https://www.blastanalytics.com/")]},
+  {id:"np",n:"Napkyn",hq:"Ottawa, Canada",cc:"Canada",lic:["ga"],svc:["impl","gov","privacy","cloud"],reg:["na"],scale:1,
+   note:"Analytics and Google Cloud consultancy.",url:"https://www.napkyn.com/",src:[site("https://www.napkyn.com/")]},
+  {id:"tv",n:"Tatvic",hq:"Ahmedabad, India",cc:"India",lic:["ga"],svc:["impl","train","cloud"],reg:["na","emea","apac"],scale:1,
+   note:"Analytics and Google Cloud partner.",url:"https://tatvic.com/",src:[site("https://tatvic.com/")]},
+  {id:"ms",n:"Making Science",hq:"Madrid, Spain",cc:"Spain",lic:["ga","dv","cm","sa"],svc:["impl","media","creative","cloud"],reg:["na","emea","latam"],scale:2,
+   note:"Digital marketing and technology partner across Europe and the Americas.",url:"https://www.makingscience.com/",src:[site("https://www.makingscience.com/")]},
+];
+CAT.forEach(p=>{p.src.push(["Google Find a Partner",GDIR]);p.checked=CHECKED;p.draft=true});
+const BYID=Object.fromEntries(CAT.map(p=>[p.id,p]));
+const TONES=["#0F766E","#1D6FA5","#3E7F5E","#2B6F8C","#4F7A6B","#246B78","#3C6E91","#2F7A73"];
+const initials=n=>{const w=n.replace(/[^A-Za-z /]/g,"").split(/[ /]+/).filter(Boolean);
+  if(w.length>1) return (w[0][0]+w[1][0]).toUpperCase();
+  const caps=w[0].replace(/[^A-Z]/g,""); return (caps.length>1?caps:w[0].slice(0,2)).slice(0,2).toUpperCase();};
+
+/* ================= icons ================= */
+const SQ="M50 0C9 0 0 9 0 50s9 50 50 50 50-9 50-50S91 0 50 0Z";
+function Sq({t,c,s=34,label}){return <span className="sq" style={{"--s":s+"px"}} role={label?"img":undefined} aria-label={label} aria-hidden={label?undefined:"true"}>
+  <svg viewBox="0 0 100 100"><path d={SQ} fill={c}/></svg><b>{t}</b></span>}
+const PROD={ga:["GA","#0F766E"],dv:["DV","#1D6FA5"],cm:["CM","#3E7F5E"],sa:["SA","#2B6F8C"],bq:["BQ","#246B78"]};
+const PROD_NAME={...LIC,bq:"BigQuery"};
+const Prod=({k,s=22})=><Sq t={PROD[k][0]} c={PROD[k][1]} s={s}/>;
+const Mono=({p,s=34})=><Sq t={initials(p.n)} c={TONES[CAT.indexOf(p)%TONES.length]} s={s}/>;
+const Ic={
+  check:(z=14)=><svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>,
+  x:(z=14)=><svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>,
+  out:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>,
+  info:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>,
+  star:<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>,
+  globe:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>,
+  mega:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M3 10v4h4l6 4V6L7 10zM16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>,
+  chev:o=><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{transform:o?"rotate(180deg)":"none"}} aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>,
+};
+const list=a=>a.length<=1?(a[0]||""):a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+const fmtDate=d=>new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+
+/* ================= questions ================= */
+const QS=[
+  {id:"need",multi:true,t:"What do you need a partner to do?",h:"Pick everything that applies.",o:[
+    ["license","License and set up Google platforms"],["audit","Audit and monitor our tracking"],["privacy","Privacy and consent compliance"],
+    ["train","Train our team to run it ourselves"],["data","Build data pipelines in BigQuery"],["media","Plan, buy and run our media"],["creative","Create our ads and creative"]]},
+  {id:"plat",multi:true,t:"Which Google platforms do you need?",h:"",o:[["ga","Analytics 360"],["dv","Display & Video 360"],["cm","Campaign Manager 360"],["sa","Search Ads 360"],["bq","BigQuery"]]},
+  {id:"trigger",t:"What’s prompting the search?",h:"",o:[["first","Buying GMP for the first time"],["renew","Renewal coming up"],["switch","Switching from our current reseller"],["add","Adding products"]]},
+  {id:"timeline",t:"When do you need a partner in place?",h:"",o:[["now","Within 3 months"],["q2","3–6 months"],["later","6+ months"],["explore","Just exploring"]]},
+  {id:"region",t:"Where do you need support?",h:"Partners that don’t serve your region are left out.",o:[["na","North America"],["emea","Europe, Middle East and Africa"],["apac","Asia-Pacific"],["latam","Latin America"],["global","All regions"]]},
+  {id:"industry",t:"Your industry",h:"Shared with the partner you contact. Not used in ranking yet.",o:[["retail","Retail and ecommerce"],["fin","Financial services"],["health","Healthcare"],["cpg","Consumer goods"],["media","Media and entertainment"],["b2b","B2B and technology"],["other","Other"]]},
+  {id:"spend",t:"Annual media through Google platforms",h:"A ballpark is fine.",o:[["s1","Under $1M"],["s2","$1M–$10M"],["s3","$10M–$50M"],["s4","Over $50M"]]},
+  {id:"foot",t:"Sites, brands or markets you measure",h:"",o:[["f1","1–5"],["f2","6–20"],["f3","21–50"],["f4","50+ worldwide"]]},
+];
+const QBY=Object.fromEntries(QS.map(q=>[q.id,q]));
+const optLabel=(qid,v)=>(QBY[qid].o.find(o=>o[0]===v)||[,""])[1];
+
+function needsFromForm(a){
+  const has=(q,v)=>(a[q]||[]).includes(v), one=q=>(a[q]||[])[0];
+  const lic=["ga","dv","cm","sa"].filter(k=>has("plat",k)); if(!lic.length&&has("need","license")) lic.push("ga");
+  const svc=new Set();
+  if(has("need","license")) svc.add("impl"); if(has("need","audit")) svc.add("gov"); if(has("need","privacy")) svc.add("privacy");
+  if(has("need","train")) svc.add("train"); if(has("need","data")||has("plat","bq")) svc.add("cloud");
+  if(has("need","media")) svc.add("media"); if(has("need","creative")) svc.add("creative");
+  const sp=one("spend"), ft=one("foot");
+  const big=(sp==="s4"&&(ft==="f3"||ft==="f4"))||(ft==="f4"&&sp==="s3");
+  const scale=big?3:(sp==="s1"&&(!ft||ft==="f1"))?1:2;
+  return {lic,svc:[...svc],region:one("region")||"na",scale,trigger:one("trigger")||"",timeline:one("timeline")||"",industry:one("industry")||"",
+    bq:has("plat","bq"),answered:QS.filter(q=>(a[q.id]||[]).length).length,ready:(a.need||[]).length>0||(a.plat||[]).length>0};
+}
+
+/* ================= swipe statements ================= */
+const CARDS=[
+  {k:"media",tag:"Media",ic:["dv","sa"],q:"We want a partner to run our media and create the ads.",ctx:"Day-to-day campaign execution and creative, not just the platforms."},
+  {k:"dvcm",tag:"Licenses",ic:["dv","cm"],q:"We need Display & Video 360 or Campaign Manager 360, not just Analytics.",ctx:"Programmatic buying or ad serving on top of measurement."},
+  {k:"gov",tag:"Data quality",ic:["ga"],q:"Our tracking needs an independent audit or ongoing monitoring.",ctx:"Numbers that drift from the backend, tags nobody owns."},
+  {k:"privacy",tag:"Privacy",ic:["ga","cm"],q:"Privacy and consent compliance is a priority this year.",ctx:"Consent Mode, cookie audits, regional rules."},
+  {k:"train",tag:"Team",ic:["ga","dv"],q:"We want our team to run these platforms confidently on its own.",ctx:"Setup, reporting and the AI features inside the tools."},
+  {k:"cloud",tag:"Data",ic:["bq"],q:"Our data team lives in BigQuery and Google Cloud.",ctx:"Warehousing, pipelines and modeling."},
+  {k:"switch",tag:"Reseller",ic:["ga"],q:"We’re switching away from our current reseller.",ctx:"Moving licenses without losing data or access."},
+  {k:"big",tag:"Scale",ic:["dv","cm"],q:"We spend over $50M a year on media across many markets.",ctx:"Global programs with regional teams."},
+  {k:"apac",tag:"Region",ic:["ga"],q:"Most of our support needs are in Asia-Pacific.",ctx:"Local teams, time zones and language."},
+  {k:"soon",tag:"Timeline",ic:["ga"],q:"We need a partner in place within three months.",ctx:"A renewal date or launch is coming up."},
+];
+function needsFromSwipe(ans){
+  const y=k=>!!ans[CARDS.findIndex(c=>c.k===k)];
+  const svc=["impl"]; ["gov","privacy","train","cloud"].forEach(k=>y(k)&&svc.push(k)); if(y("media")) svc.push("media","creative");
+  return {lic:y("dvcm")?["ga","dv","cm"]:["ga"],svc,region:y("apac")?"apac":"na",scale:y("big")?3:2,trigger:y("switch")?"switch":"",
+    timeline:y("soon")?"now":"",industry:"",bq:y("cloud"),answered:ans.length,ready:true};
+}
+
+/* ================= scoring engine ================= */
+// Fit (0–100) = licenses 25 + services 35 + region 15 + scale 15 + trigger 10. InfoTrust gets +PUB after that.
+function scorePartner(p,n){
+  const gates=[];
+  const regs=n.region==="global"?["na","emea","apac","latam"]:[n.region];
+  const missReg=regs.filter(r=>!p.reg.includes(r)); if(missReg.length) gates.push(`doesn’t serve ${list(missReg.map(r=>REG[r]))}`);
+  const missLic=n.lic.filter(l=>!p.lic.includes(l)); if(missLic.length) gates.push(`doesn’t resell ${list(missLic.map(l=>LIC[l]))}`);
+  const missHard=["media","creative"].filter(s=>n.svc.includes(s)&&!p.svc.includes(s)); if(missHard.length) gates.push(`doesn’t offer ${list(missHard.map(s=>SVC[s][0].toLowerCase()))}`);
+  const need=n.svc, wNeed=need.reduce((a,s)=>a+SVC[s][1],0), wHave=need.filter(s=>p.svc.includes(s)).reduce((a,s)=>a+SVC[s][1],0);
+  const svc=wNeed?35*wHave/wNeed:28;
+  const scale=15-7.5*Math.abs(p.scale-n.scale);
+  const trig=n.trigger==="switch"?(p.svc.includes("switch")?10:0):10;
+  const base=Math.round(25+svc+15+scale+trig);   // licenses/region are full when not gated
+  const pub=p.id==="it"?PUB:0;
+  return {id:p.id,base,total:base+pub,score:Math.min(100,base+pub),pub,gates,matched:need.filter(s=>p.svc.includes(s)),missing:need.filter(s=>!p.svc.includes(s))};
+}
+function rank(n){
+  const all=CAT.map(p=>scorePartner(p,n));
+  const ok=r=>!r.gates.length&&r.base>=SHOW_MIN&&(r.id!=="it"||r.base>=IT_MIN);
+  const sorted=all.filter(ok).sort((a,b)=>b.total-a.total||a.id.localeCompare(b.id));
+  const top=sorted.slice(0,3);
+  const it=all.find(r=>r.id==="it");
+  const noPub=all.filter(ok).sort((a,b)=>b.base-a.base||a.id.localeCompare(b.id));
+  const itRankNoPub=noPub.findIndex(r=>r.id==="it")+1;
+  let itOut=null;
+  if(!top.some(r=>r.id==="it")){
+    itOut=it.gates.length?{why:`InfoTrust ${list(it.gates)}.`,kind:"gate"}
+      :it.base<IT_MIN?{why:`InfoTrust scored ${it.base} on fit, below the ${IT_MIN} it needs to be listed.`,kind:"low"}
+      :{why:`Three partners scored higher on fit for your answers.`,kind:"rank"};
+  }
+  const path=n.svc.includes("media")||n.svc.includes("creative")?"ag":n.scale===3?"ent":"std";
+  return {top,it,itOut,itRankNoPub,path};
+}
+function whyText(r,n){
+  const p=BYID[r.id], out=[];
+  if(n.lic.length) out.push(`Resells ${list(n.lic.map(l=>LIC[l]))}, which you need.`);
+  if(r.matched.length) out.push(`Offers ${list(r.matched.map(s=>SVC[s][0].toLowerCase()))}.`);
+  if(r.missing.length) out.push(`Doesn’t list ${list(r.missing.map(s=>SVC[s][0].toLowerCase()))}.`);
+  out.push(`Serves ${n.region==="global"?"all regions":REG[n.region]}${p.scale===n.scale?`, sized for ${SCALE[n.scale].toLowerCase()} programs`:""}.`);
+  if(n.trigger==="switch"&&p.svc.includes("switch")) out.push("Supports moving licenses from another reseller.");
+  if(r.id==="it") out.push(`Includes a +${PUB} publisher weighting because InfoTrust runs this site.`);
+  return out;
+}
+
+/* ================= sim runner (beta) ================= */
 const QP=new URLSearchParams(location.search);
-const SIM=["it","ent","ag"].includes(QP.get("sim"))?QP.get("sim"):null;
+const SIM=["it","ent","ag","out"].includes(QP.get("sim"))?QP.get("sim"):null;
 const QMODE=["swipe","form"].includes(QP.get("mode"))?QP.get("mode"):null;
 const BETA=!!SIM||QP.has("beta");
 const FORM_PRESETS={
-  it:{need:["license","audit","privacy","train"],plat:["ga","dv","cm"],spend:["s2"],foot:["f2"],own:["us"],agency:["keep"]},
-  ent:{need:["license","audit"],plat:["ga","dv","cm","sa"],spend:["s4"],foot:["f4"],own:["us"],agency:["keep"]},
-  ag:{need:["media","creative"],plat:["dv","sa"],spend:["s2"],foot:["f1"],own:["agency"],agency:["replace"]},
+  it:{need:["license","audit","privacy","train"],plat:["ga","dv","cm"],trigger:["switch"],timeline:["now"],region:["na"],industry:["retail"],spend:["s2"],foot:["f2"]},
+  ent:{need:["license","audit","data"],plat:["ga","dv","cm","bq"],trigger:["add"],timeline:["q2"],region:["na"],industry:["fin"],spend:["s4"],foot:["f4"]},
+  ag:{need:["media","creative"],plat:["dv","cm"],trigger:["first"],timeline:["now"],region:["na"],industry:["cpg"],spend:["s2"],foot:["f1"]},
+  out:{need:["license","audit"],plat:["ga"],trigger:["renew"],timeline:["q2"],region:["apac"],industry:["b2b"],spend:["s3"],foot:["f2"]},
 };
-/* ---------- sim runner: a visible "ghost" cursor that clicks and swipes on its own ---------- */
-// Playback pace. Default reads like a first-time visitor; &speed=2 plays twice as fast, &speed=0.5 half as fast.
+// order matches CARDS: media, dvcm, gov, privacy, train, cloud, switch, big, apac, soon
+const SWIPE_PRESETS={
+  it:[false,true,true,true,true,false,true,false,false,true],
+  ent:[false,true,true,false,false,true,false,true,false,false],
+  ag:[true,true,false,false,false,false,false,false,false,true],
+  out:[false,false,true,false,false,false,false,false,true,false],
+};
 const PACE=Math.min(4,Math.max(.25,parseFloat(QP.get("speed"))||1));
-const SLOW=1.5/PACE;                                  // cursor moves and small mechanical gaps
+const SLOW=1.5/PACE;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms*SLOW));
 const words=t=>(t||"").trim().split(/\s+/).filter(Boolean).length;
-// Reading time: ~240 wpm (250ms/word) plus a beat to think. Scanning a list of options is a bit quicker.
 const readFor=(text,think=900)=>new Promise(r=>setTimeout(r,(think+words(text)*250)/PACE));
 const scanFor=text=>new Promise(r=>setTimeout(r,words(text)*170/PACE));
 const SimBus=new EventTarget();
@@ -222,7 +416,7 @@ const Ghost={
 };
 function simState(s){ RUN.active=s==="running"; SimBus.dispatchEvent(new CustomEvent("state",{detail:s})); }
 function stopSim(){ if(!RUN.active) return; RUN.id++; Ghost.hide(); simState("stopped"); }
-function startRun(){ const id=++RUN.id; simState("running"); const chk=()=>{ if(RUN.id!==id) throw new Error("sim stopped"); }; return chk; }
+function startRun(){ const id=++RUN.id; simState("running"); return ()=>{ if(RUN.id!==id) throw new Error("sim stopped"); }; }
 async function ghostClick(el,chk,{click=true}={}){
   el.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(480); chk();
   const r=el.getBoundingClientRect(); await Ghost.to(r.left+Math.min(r.width*.5,60),r.top+r.height*.55); chk();
@@ -232,193 +426,135 @@ async function finishOnInfoTrust(chk){
   await sleep(700); chk();
   const path=document.querySelector(".path");
   if(path){ path.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(450); chk();
-    const r=path.getBoundingClientRect(); await Ghost.to(r.left+40,r.top+r.height*.5); chk();
-    await readFor(path.innerText,1200); chk(); }                       // take in the verdict
-  // glance down the ranked list
+    const r=path.getBoundingClientRect(); await Ghost.to(r.left+40,r.top+r.height*.5); chk(); await readFor(path.innerText,1200); chk(); }
   for(const c of document.querySelectorAll(".mc .hd")){ const r=c.getBoundingClientRect(); await Ghost.to(r.left+80,r.top+r.height*.4,450); chk(); await readFor(c.querySelector(".nm").innerText,300); chk(); }
   const hd=document.querySelector('[data-pid="it"]');
   if(hd){ await ghostClick(hd,chk); await sleep(400); chk();
     const why=hd.parentElement.querySelector(".why"); if(why){ await readFor(why.innerText,800); chk(); }
     const cta=document.querySelector('[data-intent="review"]'); if(cta) await ghostClick(cta,chk,{click:false}); }
-  else { const nf=document.querySelector(".notfit"); if(nf){ const b=nf.querySelector(".btn"); nf.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(450); chk();
-    const r=nf.getBoundingClientRect(); await Ghost.to(r.left+40,r.top+30); chk(); await readFor(nf.querySelector("p").innerText,800); chk();
-    if(b) await ghostClick(b,chk,{click:false}); } }
+  else { const nf=document.querySelector(".notfit"); if(nf){ nf.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(450); chk();
+    const r=nf.getBoundingClientRect(); await Ghost.to(r.left+40,r.top+30); chk(); await readFor(nf.innerText,800); chk(); } }
   await readFor("",2200); chk(); Ghost.hide(); simState("done");
 }
 
-// order matches CARDS: media, creative, own, gov, privacy, enable, keep, big, cloud
-const SWIPE_PRESETS={
-  it:[false,false,true,true,true,true,true,false,false],
-  ent:[false,false,true,true,false,false,true,true,false],
-  ag:[true,true,false,false,false,false,false,false,false],
-};
-const WHY={
-  ent:{cp:"Built for global, enterprise-scale analytics programs.",aw:"A strong fit when Google Cloud and BigQuery sit at the center.",mm:"A strong fit when media and creative run alongside the platforms."},  it:{aw:"Worth comparing if data engineering is your main need.",cp:"Worth comparing for large, multi-year consulting engagements."},
-  ag:{mm:"Media and creative under one roof.",ti:"Performance media across many channels.",wp:"Paid media with in-house creative."},
-};
-const IT_WHY={
-  own:["Your licenses, your data","Seats in your company’s name with full edit access and data portability."],
-  lic:["Clear platform pricing","Usage-based rates kept separate from any media fees."],
-  gov:["Data you can trust","Continuous GA4 and GTM monitoring flags broken tracking before reports do."],
-  privacy:["Privacy built in","Tag and cookie audits plus Consent Mode checks in every market."],
-  enable:["A team that owns it","Onboarding and training so your team runs GMP without outside help."],
-  keep:["Works alongside your agency","Doesn’t buy media, so there’s no conflict with the agency you keep."],
-  def:["One partner across the stack","Licensing and support for Analytics 360, DV360, CM360 and SA360."],
-};
-
-/* ---------- questionnaire ---------- */
-const QS=[
-  {id:"need",multi:true,t:"What do you need a partner to do?",h:"Pick everything that applies.",o:[
-    ["media","Plan, buy and run our media"],["creative","Create our ads and creative"],["license","License and set up Google platforms"],
-    ["audit","Audit and monitor our tracking"],["privacy","Privacy and consent compliance"],["train","Train our team to run it ourselves"],["data","Build data pipelines in BigQuery"]]},
-  {id:"plat",multi:true,t:"Which Google platforms do you use or plan to use?",h:"",o:[
-    ["ga","GA4 / Analytics 360"],["dv","DV360"],["cm","CM360"],["sa","SA360"],["bq","BigQuery"],["none","None yet"]]},
-  {id:"spend",t:"Annual media through Google platforms",h:"A ballpark is fine.",o:[["s1","Under $1M"],["s2","$1M–$10M"],["s3","$10M–$50M"],["s4","Over $50M"]]},
-  {id:"foot",t:"Sites, brands or markets you measure",h:"",o:[["f1","1–5"],["f2","6–20"],["f3","21–50"],["f4","50+ worldwide"]]},
-  {id:"own",t:"Who should own your platform seats and data?",h:"",o:[["us","We should"],["agency","Our agency is fine"],["unsure","Not sure"]]},
-  {id:"agency",t:"Do you work with a media agency today?",h:"",o:[["no","No"],["keep","Yes, and we’re keeping them"],["replace","Yes, but we’re looking to replace them"]]},
-];
-function sigFromForm(a){
-  const has=(q,v)=>(a[q]||[]).includes(v);
-  return {
-    media:has("need","media"),creative:has("need","creative"),lic:has("need","license"),gov:has("need","audit"),
-    privacy:has("need","privacy"),enable:has("need","train"),cloud:has("need","data")||has("plat","bq"),
-    own:has("own","us")||has("own","unsure"),keep:has("agency","keep"),replace:has("agency","replace"),
-    big:(has("spend","s4")&&(has("foot","f3")||has("foot","f4")))||(has("foot","f4")&&has("spend","s3")),
-    mediaPlat:["dv","cm","sa"].filter(p=>has("plat",p)).length,
-    answered:QS.filter(q=>(a[q.id]||[]).length).length,
-  };
-}
-
-/* ---------- swipe ---------- */
-const CARDS=[
-  {k:"media",tag:"Media",ic:["dv","sa"],q:"We want a partner to plan, buy and run our media campaigns.",ctx:"Day-to-day campaign execution, not just the platforms."},
-  {k:"creative",tag:"Media",ic:["cm"],q:"We need someone to create our ads and creative.",ctx:"Display, video and search assets."},
-  {k:"own",tag:"Ownership",ic:["gmp"],q:"Our Google platform licenses should be in our own company’s name.",ctx:"If a partner relationship ends, the seats and data stay with you."},
-  {k:"gov",tag:"Data quality",ic:["ga"],q:"Our tracking needs an independent audit or ongoing monitoring.",ctx:"Numbers that drift from the backend, tags nobody owns."},
-  {k:"privacy",tag:"Privacy",ic:["ga","cm"],q:"Privacy and consent compliance is a priority this year.",ctx:"Consent Mode, cookie audits, regional rules."},
-  {k:"enable",tag:"Team",ic:["ga","dv","cm","sa"],q:"We want our team to run Google Marketing Platform confidently on its own.",ctx:"Setup, reporting and the AI features inside the tools."},
-  {k:"keep",tag:"Agency",ic:["dv"],q:"We already have a media agency we plan to keep.",ctx:"Looking for help alongside them, not instead of them."},
-  {k:"big",tag:"Scale",ic:["gmp"],q:"We spend over $50M a year on media across many markets.",ctx:"Global programs with regional teams."},
-  {k:"cloud",tag:"Data",ic:["bq"],q:"Our data team lives in BigQuery and Google Cloud.",ctx:"Warehousing, pipelines and modeling."},
-];
-function sigFromSwipe(ans){
-  const s={media:false,creative:false,lic:false,gov:false,privacy:false,enable:false,cloud:false,own:false,keep:false,replace:false,big:false,mediaPlat:0};
-  CARDS.forEach((c,i)=>{if(ans[i]) s[c.k]=true});
-  s.lic=s.own; s.answered=ans.length; return s;
-}
-
-/* ---------- matching: three pathways ---------- */
-function match(s){
-  const agPts=(s.media?2:0)+(s.creative?2:0)+(s.replace?1:0);
-  const itPts=[s.own,s.lic,s.gov,s.privacy,s.enable,s.keep].filter(Boolean).length;
-  let path="it";
-  if(!s.keep && agPts>=2 && agPts>itPts) path="ag";
-  else if(s.big) path="ent";
-  const itScore=Math.min(97,86+itPts*2+(s.cloud?1:0));
-  let list;
-  if(path==="it"){
-    list=[{id:"it",s:itScore},{id:"aw",s:66+(s.cloud?8:0)},{id:"cp",s:62+(s.big?6:0)}];
-  } else if(path==="ent"){
-    const first=s.cloud?"aw":"cp", third=s.mediaPlat>=2||s.media?"mm":(first==="aw"?"cp":"aw");
-    const it=Math.min(90,84+itPts);
-    list=[{id:first,s:it+3},{id:"it",s:it},{id:third,s:it-7}];
-  } else {
-    const first=s.creative?"mm":"ti";
-    list=[{id:first,s:90},{id:first==="mm"?"ti":"mm",s:85},{id:"wp",s:81}];
-  }
-  list.sort((a,b)=>b.s-a.s);
-  const why=[]; ["own","lic","gov","privacy","enable","keep"].forEach(k=>s[k]&&why.push(IT_WHY[k])); why.push(IT_WHY.def);
-  return {path,list,itWhy:why.slice(0,3)};
-}
-
-/* ---------- icons ---------- */
-const Ic={
-  check:(z=14)=><svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>,
-  x:(z=14)=><svg width={z} height={z} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>,
-  out:<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>,
-  star:<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>,
-  globe:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>,
-  mega:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M3 10v4h4l6 4V6L7 10zM16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>,
-  chev:o=><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{transform:o?"rotate(180deg)":"none",transition:"transform .2s"}} aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>,
-};
-const PATHS={
-  it:{cls:"it",ic:Ic.star,t:"Best match: an independent GMP partner",d:"Your answers point to owning your licenses, trusting your data and building your team’s skills, not media buying."},
-  ent:{cls:"ent",ic:Ic.globe,t:"Enterprise scale: compare the top three",d:"At your size, a large global partner and a focused specialist both make sense. Shortlist all three."},
-  ag:{cls:"ag",ic:Ic.mega,t:"You’re looking for a full-service media agency",d:"You want a partner to plan, buy and run campaigns and make the ads. That’s a media agency’s job."},
-};
-
-/* ---------- lead form (InfoTrust only) ---------- */
+/* ================= lead form (InfoTrust only, with consent) ================= */
 const INTENTS=[["review","Request a free stack review"],["pricing","Get licensing pricing"],["call","Talk to a specialist"]];
-function LeadForm({intent,summary,onClose}){
+function LeadForm({intent,n,shortlist,onClose}){
   const [st,setSt]=useState("idle");
   const label=(INTENTS.find(i=>i[0]===intent)||["","Agency support"])[1];
+  const discovery={products:n.lic.map(l=>LIC[l]).concat(n.bq?["BigQuery"]:[]),needs:n.svc.map(s=>SVC[s][0]),region:n.region,scale:SCALE[n.scale],
+    trigger:n.trigger&&optLabel("trigger",n.trigger),timeline:n.timeline&&optLabel("timeline",n.timeline),industry:n.industry&&optLabel("industry",n.industry)};
   const submit=async e=>{
     e.preventDefault();
-    const data=Object.fromEntries(new FormData(e.target)); data.intent=label; data.answers=summary;
+    const data=Object.fromEntries(new FormData(e.target)); data.intent=label; data.discovery=discovery; data.shortlist=shortlist; data.consent=true;
     if(!FORM_ENDPOINT){setSt("unwired");return}
     setSt("sending");
     try{const r=await fetch(FORM_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});setSt(r.ok?"done":"err")}catch{setSt("err")}
   };
-  if(st==="done") return <div className="note" role="status">Thanks. A Google Marketing Platform specialist will reply within one business day.</div>;
-  if(st==="unwired") return <div className="note" role="status">This proof of concept isn’t connected to a form yet. <a href={IT_CONTACT} target="_blank" rel="noopener">Contact InfoTrust directly</a>.</div>;
+  if(st==="done") return <div className="note" role="status">Thanks. An InfoTrust specialist will reply within one business day.</div>;
+  if(st==="unwired") return <div className="note" role="status">This beta isn’t connected to InfoTrust’s form yet, so nothing was sent. <a href={IT_CONTACT} target="_blank" rel="noopener">Contact InfoTrust directly</a>.</div>;
   return <form className="lead" onSubmit={submit}>
-    <div className="full" style={{fontWeight:700,fontSize:14}}>{label}</div>
+    <div className="full" style={{fontWeight:700,fontSize:14}}>{label} <span style={{fontWeight:400,color:"var(--ink-3)"}}>· goes to InfoTrust only</span></div>
     <label>Name<input name="name" required autoComplete="name"/></label>
     <label>Work email<input name="email" type="email" required autoComplete="email"/></label>
     <label className="full">Company<input name="company" required autoComplete="organization"/></label>
-    <label className="full">Anything we should know?<textarea name="note" defaultValue={`My match results: ${summary}`}/></label>
+    <label className="full">Anything we should know?<textarea name="note"/></label>
+    <label className="full cb"><input type="checkbox" name="consent_infotrust" required/>
+      <span>Share my contact details and answers with InfoTrust so it can reply to this request. They won’t be shared with any other partner. <a href={PRIVACY_URL} target="_blank" rel="noopener">Privacy policy</a></span></label>
     <div className="full" style={{display:"flex",gap:8}}>
-      <button className="btn btn-acc" disabled={st==="sending"}>{st==="sending"?"Sending…":"Send"}</button>
+      <button className="btn btn-acc" disabled={st==="sending"}>{st==="sending"?"Sending…":"Send to InfoTrust"}</button>
       <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
     </div>
     {st==="err"&&<div className="full note">That didn’t go through. Try again or <a href={IT_CONTACT} target="_blank" rel="noopener">contact InfoTrust directly</a>.</div>}
   </form>;
 }
 
-/* ---------- results ---------- */
-function MatchCard({row,rank,m,summary,go,open,setOpen}){
-  const p=P[row.id], isIt=row.id==="it";
+/* ================= shared pieces ================= */
+function Sources({p}){return <div className="src">Sources: {p.src.map(([l,u],i)=><span key={u}>{i?" · ":""}<a href={u} target="_blank" rel="noopener">{l}</a></span>)} · Last checked {fmtDate(p.checked)} · <a href={`#correct?partner=${p.id}`}>Suggest a correction</a></div>}
+const Yes=()=><span className="y">{Ic.check(12)} Yes</span>, No=()=><span className="n">–</span>;
+function CompareTable({ids}){
+  const ps=ids.map(i=>BYID[i]);
+  const row=(label,f)=><tr key={label}><th scope="row">{label}</th>{ps.map(p=><td key={p.id}>{f(p)}</td>)}</tr>;
+  return <div className="tbl"><table>
+    <thead><tr><th></th>{ps.map(p=><th key={p.id} scope="col"><span className="pn" style={{color:"var(--ink)"}}><Mono p={p} s={26}/>{p.n}</span></th>)}</tr></thead>
+    <tbody>
+      {Object.entries(LIC).map(([k,l])=>row(l,p=>p.lic.includes(k)?<Yes/>:<No/>))}
+      {Object.entries(SVC).map(([k,[l]])=>row(l,p=>p.svc.includes(k)?<Yes/>:<No/>))}
+      {row("Regions served",p=>p.reg.map(r=>REG[r]).join(", "))}
+      {row("Headquarters",p=>p.hq)}
+      {row("Program size",p=>SCALE[p.scale])}
+      {row("Last checked",p=>fmtDate(p.checked))}
+    </tbody></table></div>;
+}
+const PRICE={
+  ga:"Analytics 360: annual contract, priced mainly on event volume.",
+  dv:"Display & Video 360: platform fee charged as a share of media spend.",
+  cm:"Campaign Manager 360: fees based on ad-serving volume, plus optional features.",
+  sa:"Search Ads 360: fees based on the search spend managed in the platform.",
+  bq:"BigQuery: pay-as-you-go storage and query costs, billed through Google Cloud.",
+};
+function Pricing({n}){
+  const items=[...n.lic,...(n.bq?["bq"]:[])];
+  return <div className="box"><h3>What it costs</h3>
+    <ul>{items.map(k=><li key={k}>{PRICE[k]}</li>)}
+      <li>Partner services: usually a retainer or fixed-scope project. Ask each partner to quote license fees and service fees separately.</li></ul>
+    <p className="s">General pricing models, not quotes. Confirm current terms with each partner.</p></div>;
+}
+
+/* ================= results ================= */
+const PATHS={
+  std:{ic:Ic.star,t:"Your shortlist",d:"Ranked on the licenses, services, region and scale you need."},
+  ent:{ic:Ic.globe,t:"Enterprise scale: compare the top three",d:"At your size, a large global partner and a focused specialist both make sense."},
+  ag:{ic:Ic.mega,t:"You need a partner that runs media",d:"You want media buying and creative as well as the platforms, so only partners that offer both are listed."},
+};
+function MatchCard({row,rank:rk,n,itRankNoPub,go,open,setOpen,shortlist}){
+  const p=BYID[row.id], isIt=row.id==="it", pick=isIt&&rk===0;
   const [intent,setIntent]=useState(null);
-  const why=isIt?m.itWhy:[[null,WHY[m.path][row.id]]];
-  // Brand emphasis only when InfoTrust is the #1 match; at #2 it looks like every other card.
-  return <div className={"mc"+(isIt&&rank===0?" lean":"")}>
+  return <div className={"mc"+(pick?" lean":"")}>
     <button className="hd" data-pid={row.id} aria-expanded={open} onClick={()=>setOpen(open?null:row.id)}>
-      <span className="rk">{rank+1}</span>
-      <span className="nm"><span className="pn"><img className="plogo" src={p.logo} alt="" width="34" height="34"/>{p.n}</span><small>{p.d}</small></span>
-      <span className="pct">{row.s}%<small>match</small></span>
-      <span className="bar"><i style={{width:go?row.s+"%":0}}/></span>
+      <span className="rk">{rk+1}</span>
+      <span className="nm"><span className="pn"><Mono p={p}/>{p.n}
+        {pick&&<span className="pick" tabIndex={0} onClick={e=>e.stopPropagation()}>{Ic.info} Publisher’s pick
+          <span className="tip" role="tooltip">InfoTrust built and runs this site and adds +{PUB} points to its own fit score. Without that weighting it would rank #{itRankNoPub} for your answers. <a href="#method" style={{color:"var(--accent)"}}>How ranking works</a></span></span>}
+        {p.draft&&<span className="draft">Draft profile</span>}</span>
+        <small>{p.note}</small></span>
+      <span className="pct">{row.score}%<small>fit</small></span>
+      <span className="bar"><i style={{width:go?row.score+"%":0}}/></span>
     </button>
-    {!open&&<div className="more">{Ic.chev(false)} {isIt?"See why and next steps":"See why"}</div>}
+    {!open&&<div className="more">{Ic.chev(false)} {isIt?"Why this partner and next steps":"Why this partner"}</div>}
     {open&&<div className="body rise">
-      <ul className="why">{why.map((w,i)=><li key={i}>{Ic.check()}<span>{w[0]&&<b>{w[0]}. </b>}{w[1]}</span></li>)}</ul>
+      <ul className="why">{whyText(row,n).map((w,i)=><li key={i}>{Ic.check()}<span>{w}</span></li>)}</ul>
+      <Sources p={p}/>
       {isIt
         ? <><div className="acts">{INTENTS.map(([k,l])=><button key={k} data-intent={k} className={"btn "+(k==="review"?"btn-acc":"btn-ghost")} aria-pressed={intent===k} onClick={()=>setIntent(k)}>{l}</button>)}</div>
-            {intent&&<LeadForm key={intent} intent={intent} summary={summary} onClose={()=>setIntent(null)}/>}</>
+            {intent&&<LeadForm key={intent} intent={intent} n={n} shortlist={shortlist} onClose={()=>setIntent(null)}/>}</>
         : <div className="acts"><a className="btn btn-ghost" href={p.url} target="_blank" rel="noopener">Visit {p.n} {Ic.out}</a></div>}
     </div>}
   </div>;
 }
-
-function Results({s,summary}){
-  const m=useMemo(()=>match(s),[JSON.stringify(s)]);
+function Results({n}){
+  const R=useMemo(()=>rank(n),[JSON.stringify(n)]);
   const [go,setGo]=useState(false); const [open,setOpen]=useState(null); const [agForm,setAgForm]=useState(false);
   useEffect(()=>{const t=setTimeout(()=>setGo(true),80);return()=>clearTimeout(t)},[]);
-  useEffect(()=>setOpen(null),[m.path]);
-  const pa=PATHS[m.path];
+  useEffect(()=>setOpen(null),[R.path]);
+  const pa=PATHS[R.path], shortlist=R.top.map(r=>BYID[r.id].n);
   return <div>
-    <div className={"path "+pa.cls}><div className="ic">{pa.ic}</div><div><b>{pa.t}</b><span>{pa.d}</span></div></div>
-    {m.list.map((r,i)=><MatchCard key={r.id} row={r} rank={i} m={m} summary={summary} go={go} open={open===r.id} setOpen={setOpen}/>)}
-    {m.path==="ag"&&<div className="notfit">
-      <div className="t"><img className="plogo" src={P.it.logo} alt="" width="28" height="28"/>{Ic.x(16)} Not a match for this: InfoTrust</div>
-      <p>InfoTrust doesn’t buy media or create ads. It licenses and supports Google Marketing Platform and works alongside agencies. If your agency needs a licensing or data governance partner, InfoTrust can help with that part.</p>
-      {!agForm?<div className="acts"><button className="btn btn-ghost" onClick={()=>setAgForm(true)}>Ask about agency support</button></div>
-        :<LeadForm intent="agency" summary={summary} onClose={()=>setAgForm(false)}/>}
+    <div className="rdisc">Built and operated by InfoTrust, a GMP Sales Partner. InfoTrust adds a +{PUB} publisher weighting to its own score and drops out when it isn’t a fit. <a href="#method">How ranking works</a></div>
+    <div className={"path "+R.path}><div className="ic">{pa.ic}</div><div><b>{pa.t}</b><span>{pa.d}</span></div></div>
+    {R.top.length?R.top.map((r,i)=><MatchCard key={r.id} row={r} rank={i} n={n} itRankNoPub={R.itRankNoPub} go={go} open={open===r.id} setOpen={setOpen} shortlist={shortlist}/>)
+      :<div className="notfit"><p>No partner in the catalog covers every requirement. Try removing a platform or region.</p></div>}
+    {R.itOut&&<div className="notfit">
+      <div className="t">{Ic.x(16)} InfoTrust isn’t on your shortlist</div>
+      <p>{R.itOut.why} {R.path==="ag"?"InfoTrust licenses and supports Google Marketing Platform and works alongside media agencies, but doesn’t buy media or create ads.":"We only list InfoTrust when it can deliver what you need."}</p>
+      {R.path==="ag"&&(!agForm?<div className="acts"><button className="btn btn-ghost" onClick={()=>setAgForm(true)}>Ask InfoTrust about agency support</button></div>
+        :<LeadForm intent="agency" n={n} shortlist={shortlist} onClose={()=>setAgForm(false)}/>)}
     </div>}
+    {R.top.length>1&&<div className="box"><h3>Side by side</h3><CompareTable ids={R.top.map(r=>r.id)}/></div>}
+    {(n.lic.length>0||n.bq)&&<Pricing n={n}/>}
   </div>;
 }
 
-/* ---------- modes ---------- */
+/* ================= match modes ================= */
 function Questionnaire(){
   const [a,setA]=useState({});
   useEffect(()=>{
@@ -427,13 +563,12 @@ function Questionnaire(){
     SimBus.addEventListener("skip",skip);
     const chk=startRun();
     (async()=>{try{
-      await readFor("",1500); chk();                                   // land on the page
+      await readFor("",1500); chk();
       for(const q of QS){
         const box=document.querySelector(`[data-q="${q.id}"]`);
         if(box){ box.scrollIntoView({behavior:"smooth",block:"center"}); await sleep(450); chk();
           const r=box.querySelector("h3").getBoundingClientRect(); await Ghost.to(r.left+Math.min(r.width,220),r.top+r.height/2); chk();
-          await readFor(q.t+" "+q.h,700); chk();                        // read the question
-          await scanFor(q.o.map(o=>o[1]).join(" ")); chk(); }           // scan the options
+          await readFor(q.t+" "+q.h,700); chk(); await scanFor(q.o.map(o=>o[1]).join(" ")); chk(); }
         for(const v of (FORM_PRESETS[SIM][q.id]||[])){
           const el=document.querySelector(`[data-chip="${q.id}:${v}"]`); if(el){ await ghostClick(el,chk); await readFor("",500); chk(); }
         }
@@ -445,28 +580,23 @@ function Questionnaire(){
   const tog=(q,v)=>setA(x=>{
     const cur=x[q.id]||[];
     if(!q.multi) return {...x,[q.id]:cur[0]===v?[]:[v]};
-    let n=cur.includes(v)?cur.filter(y=>y!==v):[...cur,v];
-    if(q.id==="plat") n=v==="none"?(cur.includes("none")?[]:["none"]):n.filter(y=>y!=="none");
-    return {...x,[q.id]:n};
+    return {...x,[q.id]:cur.includes(v)?cur.filter(y=>y!==v):[...cur,v]};
   });
-  const s=sigFromForm(a);
-  const summary=QS.map(q=>(a[q.id]||[]).length?`${q.t} ${(a[q.id]).map(v=>q.o.find(o=>o[0]===v)[1]).join(", ")}`:null).filter(Boolean).join(" | ");
+  const n=needsFromForm(a);
   return <div className="qa">
     <div className="panel">
       {QS.map(q=><div className="q" key={q.id} data-q={q.id}>
         <h3>{q.t}</h3>{q.h&&<p>{q.h}</p>}
         <div className="chips" role={q.multi?"group":"radiogroup"} aria-label={q.t}>
           {q.o.map(([v,l])=>{const on=(a[q.id]||[]).includes(v);return <button key={v} data-chip={q.id+":"+v} className={"chip "+(q.multi?"multi":"radio")+(on?" on":"")}
-            role={q.multi?"checkbox":"radio"} aria-checked={on} onClick={()=>tog(q,v)}><span className="bx"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>{q.id==="plat"&&PROD[v]&&<img className="cico" src={PROD[v][0]} alt="" width="18" height="18"/>}{l}</button>})}
+            role={q.multi?"checkbox":"radio"} aria-checked={on} onClick={()=>tog(q,v)}><span className="bx"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>{q.id==="plat"&&<Prod k={v} s={20}/>}{l}</button>})}
         </div>
       </div>)}
-      {s.answered>0&&<button className="reset" onClick={()=>setA({})}>Clear answers</button>}
+      {n.answered>0&&<button className="reset" onClick={()=>setA({})}>Clear answers</button>}
     </div>
     <div className="side" aria-live="polite">
       <div className="eyebrow" style={{marginBottom:10}}>Your top matches</div>
-      {(a.need||[]).length||s.answered>=2
-        ? <Results s={s} summary={summary}/>
-        : <div className="panel empty">Start with what you need a partner to do. Your top three matches update as you answer.</div>}
+      {n.ready?<Results n={n}/>:<div className="panel empty">Start with what you need a partner to do or which platforms you need. Your top three matches update as you answer.</div>}
     </div>
   </div>;
 }
@@ -486,12 +616,12 @@ function Swipe(){
     SimBus.addEventListener("skip",skip);
     const chk=startRun();
     (async()=>{try{
-      await readFor("",1500); chk();                                   // land on the page
+      await readFor("",1500); chk();
       document.querySelector(".deck").scrollIntoView({behavior:"smooth",block:"center"}); await sleep(500);
       for(let k=0;k<CARDS.length;k++){
         chk(); const card=document.querySelector(".deck .card:not(.under)"); if(!card) break;
         const r=card.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height*.45, dir=pre[k]?1:-1;
-        await readFor(CARDS[k].q+" "+CARDS[k].ctx,800); chk();          // read the statement, then decide
+        await readFor(CARDS[k].q+" "+CARDS[k].ctx,800); chk();
         await Ghost.to(cx,cy,k?380:600); chk(); await sleep(250); chk();
         Ghost.down(true); setDx(dir*170); await Ghost.to(cx+dir*170,cy+12,320); chk();
         decide(pre[k]); Ghost.down(false); await sleep(420);
@@ -502,14 +632,11 @@ function Swipe(){
   },[]);
   useEffect(()=>{const k=e=>{if(e.key==="ArrowRight")decide(true);if(e.key==="ArrowLeft")decide(false)};window.addEventListener("keydown",k);return()=>window.removeEventListener("keydown",k)},[decide]);
   useEffect(()=>{if(done) window.scrollTo({top:0,behavior:"smooth"})},[done]);
-  if(done){
-    const summary=CARDS.map((c,k)=>`${ans[k]?"True":"Not yet"}: ${c.q}`).join(" | ");
-    return <div className="res-full rise">
-      <div className="eyebrow" style={{marginBottom:10}}>Your top matches</div>
-      <Results s={sigFromSwipe(ans)} summary={summary}/>
-      <div className="again"><button className="btn btn-ghost" onClick={()=>{setAns([]);setI(0)}}>Start over</button></div>
-    </div>;
-  }
+  if(done) return <div className="rise" style={{maxWidth:780,margin:"0 auto"}}>
+    <div className="eyebrow" style={{marginBottom:10}}>Your top matches</div>
+    <Results n={needsFromSwipe(ans)}/>
+    <div style={{display:"flex",justifyContent:"center",marginTop:18}}><button className="btn btn-ghost" onClick={()=>{setAns([]);setI(0)}}>Start over</button></div>
+  </div>;
   const down=e=>{start.current=e.clientX;e.currentTarget.setPointerCapture(e.pointerId)};
   const move=e=>{if(start.current!==null)setDx(e.clientX-start.current)};
   const up=()=>{if(start.current===null)return;start.current=null;if(dx>100)decide(true);else if(dx<-100)decide(false);else setDx(0)};
@@ -525,7 +652,7 @@ function Swipe(){
         <div><span className="tag">{c.tag}</span><h2>{c.q}</h2><div className="ctx">{c.ctx}</div></div>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{fontSize:13,color:"var(--ink-4)"}}>{i+1} of {CARDS.length}</span>
-          <span className="cicons">{c.ic.map(k=><img key={k} src={PROD[k][0]} alt={PROD[k][1]} title={PROD[k][1]} width="30" height="30" draggable="false"/>)}</span>
+          <span className="cicons">{c.ic.map(k=><Prod key={k} k={k} s={30}/>)}</span>
         </div>
       </div>
     </div>
@@ -537,48 +664,169 @@ function Swipe(){
   </section>;
 }
 
-function App(){
+function MatchView(){
   const [mode,setMode]=useState(()=>{if(QMODE) return QMODE;try{return localStorage.getItem("gmp-mode")||"swipe"}catch{return "swipe"}});
   useEffect(()=>{try{localStorage.setItem("gmp-mode",mode)}catch{}},[mode]);
-  const M=[["swipe","Swipe cards"],["form","Questionnaire"]];
-  const SIMS=[["it","InfoTrust #1"],["ent","Enterprise (InfoTrust #2)"],["ag","Media agency"]];
+  return <>
+    <section className="hero">
+      <div className="eyebrow">Google Marketing Platform</div>
+      <h1>Find the right GMP partner for your stack</h1>
+      <p className="lede">Answer a few questions and get a shortlist of Google Marketing Platform partners, compared on licenses, services, region and scale.</p>
+      <div className="prods" aria-label="Platforms covered">{["ga","dv","cm","sa","bq"].map(k=><span key={k}><Prod k={k}/>{PROD_NAME[k]}</span>)}</div>
+      <div className="modes" role="radiogroup" aria-label="Answer mode">
+        {[["swipe","Swipe cards"],["form","Questionnaire"]].map(([k,l])=><label key={k} className={mode===k?"on":""}><input type="radio" name="mode" value={k} checked={mode===k} onChange={()=>setMode(k)}/>{l}</label>)}
+      </div>
+      <p className="mhint">{mode==="swipe"?`${CARDS.length} quick statements. Swipe right if it’s true for you.`:"Pick what applies and filter your matches as you go."}</p>
+    </section>
+    {mode==="swipe"?<Swipe/>:<Questionnaire/>}
+  </>;
+}
+
+/* ================= browse ================= */
+function BrowseView(){
+  const [q,setQ]=useState(""); const [f,setF]=useState({lic:[],svc:[],reg:[],cc:[]}); const [cmp,setCmp]=useState([]);
+  const tog=(g,v)=>setF(x=>({...x,[g]:x[g].includes(v)?x[g].filter(y=>y!==v):[...x[g],v]}));
+  const countries=[...new Set(CAT.map(p=>p.cc))].sort();
+  const shown=CAT.filter(p=>{
+    const t=(p.n+" "+p.note+" "+p.hq).toLowerCase();
+    return (!q||t.includes(q.toLowerCase()))&&f.lic.every(l=>p.lic.includes(l))&&f.svc.every(s=>p.svc.includes(s))&&f.reg.every(r=>p.reg.includes(r))&&(!f.cc.length||f.cc.includes(p.cc));
+  }).sort((a,b)=>a.n.localeCompare(b.n));
+  const Grp=({g,title,opts})=><div className="grp"><h4>{title}</h4>{opts.map(([v,l])=><label key={v}><input type="checkbox" checked={f[g].includes(v)} onChange={()=>tog(g,v)}/>{l}</label>)}</div>;
+  const toggleCmp=id=>setCmp(c=>c.includes(id)?c.filter(x=>x!==id):c.length<3?[...c,id]:c);
+  return <>
+    <section className="hero"><div className="eyebrow">Partner directory</div><h1>Browse GMP partners</h1>
+      <p className="lede">Filter every partner in the catalog by licenses, services, regions served and headquarters. Listed alphabetically, with no publisher weighting.</p></section>
+    <div className="browse">
+      <aside className="panel filters" aria-label="Filters">
+        <Grp g="lic" title="Licenses offered" opts={Object.entries(LIC)}/>
+        <Grp g="svc" title="Skills and services" opts={Object.entries(SVC).map(([k,[l]])=>[k,l])}/>
+        <Grp g="reg" title="Geography served" opts={Object.entries(REG)}/>
+        <Grp g="cc" title="Headquarters" opts={countries.map(c=>[c,c])}/>
+        <button className="reset" onClick={()=>{setF({lic:[],svc:[],reg:[],cc:[]});setQ("")}}>Clear filters</button>
+      </aside>
+      <div>
+        <input className="search" type="search" placeholder="Search partners" aria-label="Search partners" value={q} onChange={e=>setQ(e.target.value)}/>
+        {cmp.length>=2&&<div className="box" style={{marginTop:0,marginBottom:14}}><h3>Comparing {cmp.length} partners</h3><CompareTable ids={cmp}/></div>}
+        <p className="count">{shown.length} of {CAT.length} partners{cmp.length?` · ${cmp.length} selected to compare (up to 3)`:" · tick up to 3 to compare"}</p>
+        {shown.map(p=><div className="pcard" key={p.id}>
+          <div className="top"><div className="pn" style={{fontWeight:700,fontSize:16}}><Mono p={p}/>{p.n}{p.draft&&<span className="draft">Draft profile</span>}</div>
+            <label className="cmpbox"><input type="checkbox" checked={cmp.includes(p.id)} disabled={!cmp.includes(p.id)&&cmp.length>=3} onChange={()=>toggleCmp(p.id)}/>Compare</label></div>
+          <p style={{margin:"8px 0 0",fontSize:14,color:"var(--ink-2)"}}>{p.note} {p.hq}.</p>
+          <div className="tags">{p.lic.map(l=><span key={l}>{LIC[l]}</span>)}{p.svc.map(s=><span key={s}>{SVC[s][0]}</span>)}{p.reg.map(r=><span key={r}>{REG[r]}</span>)}</div>
+          <Sources p={p}/>
+        </div>)}
+        {!shown.length&&<div className="panel empty">No partners match every filter. Try removing one.</div>}
+      </div>
+    </div>
+  </>;
+}
+
+/* ================= methodology ================= */
+function MethodView(){
+  return <div className="doc">
+    <section className="hero"><div className="eyebrow">Methodology</div><h1>How ranking works</h1>
+      <p className="lede">GMP Partner Finder is built and operated by InfoTrust, a Google Marketing Platform Sales Partner. This page explains exactly how the shortlist is scored, including the weighting InfoTrust gives itself.</p></section>
+    <h2 className="sec">Fit score</h2>
+    <p>Each partner gets a fit score from 0 to 100 based on your answers:</p>
+    <div className="tbl"><table><thead><tr><th>Criterion</th><th>Points</th><th>How it’s scored</th></tr></thead><tbody>
+      <tr><td>Licenses</td><td>25</td><td>Full points if the partner resells every Google platform you need. A partner missing one is left off the shortlist.</td></tr>
+      <tr><td>Services</td><td>35</td><td>Share of the services you need that the partner offers, weighted as shown below.</td></tr>
+      <tr><td>Region</td><td>15</td><td>Full points if the partner serves your region. A partner that doesn’t is left off the shortlist.</td></tr>
+      <tr><td>Scale</td><td>15</td><td>How closely the partner’s typical program size matches yours.</td></tr>
+      <tr><td>Situation</td><td>10</td><td>If you’re switching resellers, partners that support license transfers get these points. Otherwise everyone does.</td></tr>
+    </tbody></table></div>
+    <h2 className="sec">Service weights</h2>
+    <p>The publisher chose these weights. Data quality, governance and privacy count double because they shape how much you can trust your data. They are also areas where InfoTrust is strong.</p>
+    <ul>{Object.values(SVC).map(([l,w])=><li key={l}>{l}: ×{w}</li>)}</ul>
+    <h2 className="sec">Publisher weighting</h2>
+    <p>InfoTrust adds <b>+{PUB} points</b> to its own fit score. When InfoTrust ranks first, its card is labeled “Publisher’s pick” and shows where it would rank without the weighting.</p>
+    <h2 className="sec">When InfoTrust drops out</h2>
+    <ul>
+      <li>InfoTrust is never listed for something it can’t deliver: a region it doesn’t serve, a platform it doesn’t resell, or media buying and creative, which it doesn’t offer.</li>
+      <li>InfoTrust must reach a fit score of {IT_MIN} before weighting to be listed at all. Below that, it drops off the shortlist even if the weighting would lift it.</li>
+      <li>InfoTrust can also land outside the top three when other partners simply fit better.</li>
+      <li>Any partner scoring under {SHOW_MIN} is left off the shortlist.</li>
+    </ul>
+    <h2 className="sec">What isn’t scored yet</h2>
+    <p>Industry and timeline are shared with the partner you contact but don’t affect ranking. The Browse page lists partners alphabetically with no weighting.</p>
+    <h2 className="sec">Data sources</h2>
+    <p>Partner profiles use public sources only: each partner’s website, Google’s Find a Partner directory and press releases. Every profile lists its sources and the date it was last checked. Profiles marked “Draft profile” haven’t been verified yet.</p>
+    <div className="tbl"><table><thead><tr><th>Partner</th><th>Sources</th><th>Last checked</th></tr></thead><tbody>
+      {[...CAT].sort((a,b)=>a.n.localeCompare(b.n)).map(p=><tr key={p.id}><td>{p.n}{p.draft&&" (draft)"}</td><td>{p.src.map(([l,u],i)=><span key={u}>{i?", ":""}<a href={u} target="_blank" rel="noopener">{l}</a></span>)}</td><td>{fmtDate(p.checked)}</td></tr>)}
+    </tbody></table></div>
+    <h2 className="sec">Corrections</h2>
+    <p>If a profile is wrong, <a href="#correct">send a correction</a>. The {CORRECTION_OWNER} responds within 10 business days.</p>
+    <h2 className="sec">Not affiliated with Google</h2>
+    <p>This site isn’t run or endorsed by Google. Partner and product names belong to their owners.</p>
+  </div>;
+}
+
+/* ================= corrections ================= */
+function CorrectView(){
+  const pre=new URLSearchParams(location.hash.split("?")[1]||"").get("partner")||"";
+  const [st,setSt]=useState("idle");
+  const submit=async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.target));data.type="partner-correction";
+    if(!FORM_ENDPOINT){setSt("unwired");return} setSt("sending");
+    try{const r=await fetch(FORM_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});setSt(r.ok?"done":"err")}catch{setSt("err")}};
+  return <div className="doc">
+    <section className="hero"><div className="eyebrow">Corrections</div><h1>Suggest a correction</h1>
+      <p className="lede">Partners and buyers can flag anything inaccurate in a profile. The {CORRECTION_OWNER} reviews every request and responds within 10 business days.</p></section>
+    {st==="done"?<div className="note">Thanks. We’ll respond within 10 business days.</div>
+     :st==="unwired"?<div className="note">This beta isn’t connected to a form yet, so nothing was sent.</div>
+     :<form className="lead panel" onSubmit={submit} style={{maxWidth:640}}>
+      <label className="full">Partner profile<select name="partner" defaultValue={pre} required><option value="">Choose a partner</option>{[...CAT].sort((a,b)=>a.n.localeCompare(b.n)).map(p=><option key={p.id} value={p.id}>{p.n}</option>)}</select></label>
+      <label>Your name<input name="name" required autoComplete="name"/></label>
+      <label>Work email<input name="email" type="email" required autoComplete="email"/></label>
+      <label className="full">Company<input name="company" autoComplete="organization"/></label>
+      <label className="full">What’s incorrect?<textarea name="issue" required/></label>
+      <label className="full">Source that supports the change<input name="source" type="url" placeholder="https://"/></label>
+      <label className="full cb"><input type="checkbox" required name="consent"/><span>InfoTrust can use these details to review and reply to this correction. <a href={PRIVACY_URL} target="_blank" rel="noopener">Privacy policy</a></span></label>
+      <div className="full"><button className="btn btn-acc" disabled={st==="sending"}>{st==="sending"?"Sending…":"Send correction"}</button></div>
+      {st==="err"&&<div className="full note">That didn’t go through. Please try again.</div>}
+    </form>}
+  </div>;
+}
+
+/* ================= app shell ================= */
+const viewFromHash=()=>{const h=location.hash.replace("#","").split("?")[0];return ["browse","method","correct"].includes(h)?h:"match"};
+function App(){
+  const [view,setView]=useState(SIM?"match":viewFromHash());
+  useEffect(()=>{const f=()=>{setView(viewFromHash());window.scrollTo(0,0)};window.addEventListener("hashchange",f);return()=>window.removeEventListener("hashchange",f)},[]);
+  const SIMS=[["it","InfoTrust #1"],["ent","Enterprise (InfoTrust #2)"],["ag","Media agency"],["out","InfoTrust drops out"]];
   const [sim,setSim]=useState(SIM?"running":null);
   useEffect(()=>{
     if(!SIM) return;
     const on=e=>setSim(e.detail);
-    // Any real click or key press hands control back to the tester.
     const take=e=>{ if(e.isTrusted&&RUN.active&&!(e.target.closest&&e.target.closest(".simtoast"))) stopSim(); };
     SimBus.addEventListener("state",on); window.addEventListener("pointerdown",take,true); window.addEventListener("keydown",take,true);
     return()=>{SimBus.removeEventListener("state",on);window.removeEventListener("pointerdown",take,true);window.removeEventListener("keydown",take,true)};
   },[]);
-  const simName=SIM&&SIMS.find(s=>s[0]===SIM)[1];
+  const NAV=[["match","Find a match","#"],["browse","Browse partners","#browse"],["method","How ranking works","#method"]];
+  const curMode=QMODE||"swipe";
   return <>
-    {SIM&&sim&&<div className="simtoast" role="status">
-      {sim==="running"?<><span className="dotlive"/>Simulating: {simName}. Click anywhere to take over.
-        <button onClick={()=>SimBus.dispatchEvent(new Event("skip"))}>Skip to results</button></>
-       :<>{sim==="done"?"Simulation finished.":"You’ve taken over."}<button onClick={()=>location.reload()}>Replay</button></>}
-    </div>}
     {BETA&&<div className="beta" role="navigation" aria-label="Beta pathway simulator">
       <b>Beta · simulate a pathway</b>
       {SIMS.map(([k,l])=><span key={k} className={"bs"+(SIM===k?" on":"")}>{SIM===k&&Ic.check(12)}{l}:
-        <a href={`?sim=${k}&mode=swipe`} aria-current={SIM===k&&mode==="swipe"?"page":undefined}>swipe</a>
-        <a href={`?sim=${k}&mode=form`} aria-current={SIM===k&&mode==="form"?"page":undefined}>questionnaire</a></span>)}
+        <a href={`?sim=${k}&mode=swipe`} aria-current={SIM===k&&curMode==="swipe"?"page":undefined}>swipe</a>
+        <a href={`?sim=${k}&mode=form`} aria-current={SIM===k&&curMode==="form"?"page":undefined}>questionnaire</a></span>)}
       <a href="?beta">clear</a>
     </div>}
-    <header><div className="mark"><i/>GMP Partner Match</div><small>Free · about 2 minutes</small></header>
+    {SIM&&sim&&<div className="simtoast" role="status">
+      {sim==="running"?<><span className="dotlive"/>Simulating: {SIMS.find(s=>s[0]===SIM)[1]}. Click anywhere to take over.
+        <button onClick={()=>SimBus.dispatchEvent(new Event("skip"))}>Skip to results</button></>
+       :<>{sim==="done"?"Simulation finished.":"You’ve taken over."}<button onClick={()=>location.reload()}>Replay</button></>}
+    </div>}
+    <header>
+      <a className="mark" href="#"><Sq t="PF" c="#0F766E" s={28}/>GMP Partner Finder</a>
+      <nav aria-label="Main">{NAV.map(([k,l,h])=><a key={k} href={h} aria-current={view===k?"page":undefined}>{l}</a>)}</nav>
+    </header>
+    <div className="disc">{Ic.info}<span>Built and operated by <b>InfoTrust</b>, a Google Marketing Platform Sales Partner. InfoTrust is one of the partners listed. <a href="#method">How ranking works</a></span></div>
     <div className="wrap">
-      <section className="hero">
-        <div className="eyebrow">Google Marketing Platform</div>
-        <h1>Find the right partner for your Google stack</h1>
-        <p className="lede">Answer a few questions and get your top three matches, whether you need a licensing and data partner, an enterprise consultancy or a full-service media agency.</p>
-        <div className="prods" aria-label="Platforms covered">{["ga","dv","cm","sa","bq"].map(k=><span key={k}><img src={PROD[k][0]} alt="" width="22" height="22"/>{PROD[k][1]}</span>)}</div>
-        <div className="modes" role="radiogroup" aria-label="Answer mode">
-          {M.map(([k,l])=><label key={k} className={mode===k?"on":""}><input type="radio" name="mode" value={k} checked={mode===k} onChange={()=>setMode(k)}/>{l}</label>)}
-        </div>
-        <p className="mhint">{mode==="swipe"?"Nine quick statements. Swipe right if it’s true for you.":"Pick what applies and filter your matches as you go."}</p>
-      </section>
-      {mode==="swipe"?<Swipe/>:<Questionnaire/>}
-      <p className="foot">GMP Partner Match is provided by InfoTrust. Match scores are illustrative and reflect InfoTrust’s view of the market. Partner names belong to their owners, who aren’t affiliated with this tool.</p>
+      {view==="match"&&<MatchView/>}
+      {view==="browse"&&<BrowseView/>}
+      {view==="method"&&<MethodView/>}
+      {view==="correct"&&<CorrectView/>}
+      <p className="foot">GMP Partner Finder is built and operated by InfoTrust, a Google Marketing Platform Sales Partner, and applies a disclosed publisher weighting. <a href="#method">How ranking works</a> · <a href="#correct">Suggest a correction</a>. Not affiliated with or endorsed by Google. Partner and product names belong to their owners.</p>
     </div>
   </>;
 }
